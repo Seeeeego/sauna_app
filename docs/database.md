@@ -118,8 +118,16 @@ erDiagram
 | `image_url` | VARCHAR(2048) | | 思い出の画像（S3等のURLを想定） |
 | `created_at` | TIMESTAMP | DEFAULT NOW() | 作成日時 |
 
+## 3.テーブル間リレーション一覧
 
-
+| 親テーブル | 子テーブル | リレーション種別 | 統合キー(FK) | 概要 |
+| :--- | :--- | :--- | :--- | :--- |
+| users | facilities | 1 対 多 (1:N) | facilities.user_id | 1人のユーザーは複数の施設を初回登録できる |
+| users | visits | 1 対 多 (1:N) | visits.user_id | 1人のユーザーは複数の訪問記録を作成できる |
+| visits | visit_images | 1 対 多 (1:N) | visit_images.visit_id | 1回の訪問記録に対して複数の画像を保存できる |
+| facilities | visits | 1 対 多 (1:N) | visits.facility_id | 1つの施設は複数の訪問記録を保持する |
+| facilities | facility_tags | 1 対 多 (1:N) | facility_tags.facility_id | 1つの施設は複数のタグを持てる |
+| tags | facility_tags | 1 対 多 (1:N) | facility_tags.tag_id | 1つのタグは複数の施設に付けられる |
 
 
 
