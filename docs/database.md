@@ -25,6 +25,8 @@ erDiagram
         INTEGER fee "利用料金"
         INTEGER rating "評価"
         TEXT comment "コメント"
+        DATE created_at "登録日時"
+        DATE updeted_at "更新日時"
     }
 
     tags {
@@ -80,16 +82,53 @@ erDiagram
 
 | カラム名 | データ型 | 制約 | 備考 |
 | :--- | :--- | :--- | :--- |
-| `id` | INTEGER | PRIMARY KEY | 一意の識別子（自動連番・サロゲートキー） |
+| `id` | INTEGER | PRIMARY KEY | 自動連番 |
 | `user_id` | INTEGER | FOREIGN KEY | 訪問したユーザーのID |
 | `facility_id` | INTEGER | FOREIGN KEY | 訪問した施設のID |
 | `visit_date`| DATE | NOT NULL | 実際に施設を訪れた日付 |
 | `fee` | INTEGER | | その日支払った利用料金（円） |
 | `rating` | INTEGER | NOT NULL | 1〜5段階の星評価 |
 | `comment` | TEXT | | 感想・レビュー本文 |
-| `image_url` | VARCHAR(2048) | | 思い出の画像（S3等のURLを想定） |
+| `created_at`| TIMESTAMP | DEFAULT NOW() | 訪問記録の初回登録日時 |
+| `updated_at`| TIMESTAMP | DEFAULT NOW() | 訪問記録の最終更新日時 |
 
-テーブル同士のリレーション（繋がり）
+### 2.4 tags（特徴タグテーブル）
+属性ラベル。ex.「サウナあり」,「露天風呂あり」
+
+| カラム名 | データ型 | 制約 | 備考 |
+| :--- | :--- | :--- | :--- |
+| `id` | SERIAL | PRIMARY KEY | 自動連番 |
+| `name` | VARCHAR(30) | NOT NULL | タグ名 |
+
+### 2.5 facility_tags（施設とタグの中間テーブル）
+施設とタグの「多対多（N:N）」の関係を結ぶ。
+
+| カラム名 | データ型 | 制約 | 備考 |
+| :--- | :--- | :--- | :--- |
+| `facility_id` | INTEGER | FOREIGN KEY | 施設ID |
+| `tag_id` | INTEGER | FOREIGN KEY | タグID |
+
+### 2.6 visit_images（訪問画像テーブル）
+1回の訪問に対して複数枚の思い出写真を保存する。
+
+| カラム名 | データ型 | 制約 | 備考 |
+| :--- | :--- | :--- | :--- |
+| `id` | SERIAL | PRIMARY KEY | 画像ID |
+| `visit_id` | INTEGER | FOREIGN KEY | 訪問記録ID |
+| `image_url` | VARCHAR(2048) | | 思い出の画像（S3等のURLを想定） |
+| `created_at` | TIMESTAMP | DEFAULT NOW() | 作成日時 |
+
+
+
+
+
+
+
+
+
+
+
+<!-- テーブル同士のリレーション（繋がり）
 実務のワンポイント:
-Markdown内で「Mermaid（マーメイド）」という記法を使うと、テキストで書くだけでGitHub上で綺麗なER図（テーブル関係図）が表示されるため、ポートフォリオとしても非常に見栄えが良くなります。
+Markdown内で「Mermaid（マーメイド）」という記法を使うと、テキストで書くだけでGitHub上で綺麗なER図（テーブル関係図）が表示されるため、ポートフォリオとしても非常に見栄えが良くなります。 -->
 
