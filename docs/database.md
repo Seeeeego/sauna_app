@@ -12,6 +12,7 @@ erDiagram
         VARCHER(20) prefecture "都道府県名"
         VARCHAER(200) address "住所"
         INTEGER user_id  FK "登録者"
+        VARCHAR(200) hp_url "施設hpリンク"
         DATE created_at "登録日時"
         DATE updeted_at "更新日時"
     }
@@ -24,12 +25,28 @@ erDiagram
         INTEGER fee "利用料金"
         INTEGER rating "評価"
         TEXT comment "コメント"
-        VARCHAER(2048) image_url "画像"
+    }
+
+    tags {
+        SERIAL id PK "タグID"
+        VARCHAR name "タグ名 (例: セルフロウリュ)"
+    }
+    facility_tags {
+        INTEGER facility_id FK
+        INTEGER tag_id FK
+    }
+    visit_images {
+        SERIAL id PK "画像ID"
+        INTEGER visit_id FK "訪問記録ID"
+        VARCHAR image_url "画像URL"
     }
     
-    users ||..o{ visits : makes
-    facilities ||..o{ visits : has
-    users ||..o{ facilities : makes
+    users ||--o{ facilities : "登録する"
+    users ||--o{ visits : "記録する"
+    facilities ||--o{ visits : "保持する"
+    facilities ||--o{ facility_tags : ""
+    tags ||--o{ facility_tags : ""
+    visits ||--o{ visit_images : "保持する"
 ```
 
 <!-- テーブル名、カラム名、データ型、制約（必須項目など） -->
@@ -54,6 +71,7 @@ erDiagram
 | `prefecture` | VARCHAR(20) | NOT NULL | 都道府県（検索・地図UI連動用） |
 | `address` | VARCHAR(200) | | 詳細な住所 |
 | `user_id` | INTEGER | FOREIGN KEY | 施設を初登録したユーザーのID |
+| `hp_url` | VARCHAR(200) | UNIQUE | 施設ホームページへのリンク |
 | `created_at`| TIMESTAMP | DEFAULT NOW() | 施設データの初回登録日時 |
 | `updated_at`| TIMESTAMP | DEFAULT NOW() | 施設データの最終更新日時 |
 
