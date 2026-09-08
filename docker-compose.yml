@@ -9,6 +9,8 @@ services:
     ports:
       - "4000:4000"
     command: sleep infinity         # Dev Container 用に待機させる
+    depends_on:
+      - db
 
   db:
     image: postgres:18

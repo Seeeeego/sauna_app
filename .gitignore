@@ -43,3 +43,6 @@ next-env.d.ts
 # pnpm store
 .pnpm-store/
 .pnpm-debug.log*
+
+# Prisma 生成クライアント
+src/generated/
