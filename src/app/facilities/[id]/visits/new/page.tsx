@@ -50,7 +50,7 @@ await prisma.visit.create({
 });
 
     // 登録完了後、施設詳細画面へリダイレクト
-    redirect(`/facilities/${id}`);
+    redirect(`/facilities/${id}/visits/success`);
   }
 
   // 本日の日付（YYYY-MM-DD形式）を初期値用に取得
