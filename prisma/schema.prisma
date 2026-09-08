@@ -7,9 +7,73 @@ datasource db {
   provider = "postgresql"
 }
 
-model Todo {
+model User {
+  id         Int        @id @default(autoincrement())
+  name       String     @db.VarChar(50)
+  email      String     @unique @db.VarChar(50)
+  facilities Facility[]
+  visits     Visit[]
+}
+
+model Facility {
+  id         Int           @id @default(autoincrement())
+  name       String        @db.VarChar(50)
+  prefecture String        @db.VarChar(20)
+  address    String?       @db.VarChar(200)
+  hpUrl      String?       @db.VarChar(200)
+  
+  userId     Int
+  createdBy  User          @relation(fields: [userId], references: [id])
+  
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  visits     Visit[]
+  tags       FacilityTag[]
+
+  @@index([prefecture])
+}
+
+model Tag {
+  id         Int           @id @default(autoincrement())
+  name       String        @unique @db.VarChar(30)
+  facilities FacilityTag[]
+}
+
+model FacilityTag {
+  facilityId Int
+  facility   Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  tagId      Int
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([facilityId, tagId])
+}
+
+model Visit {
+  id         Int          @id @default(autoincrement())
+  userId     Int
+  user       User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  facilityId Int
+  facility   Facility     @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  
+  visitDate  DateTime     @db.Date
+  fee        Int?
+  rating     Int
+  comment    String?      @db.Text
+  
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  images     VisitImage[]
+
+  @@index([rating])
+  @@index([fee])
+}
+
+model VisitImage {
   id        Int      @id @default(autoincrement())
-  title     String
-  done      Boolean  @default(false)
+  visitId   Int
+  visit     Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  imageUrl  String   @db.VarChar(2048)
   createdAt DateTime @default(now())
 }
