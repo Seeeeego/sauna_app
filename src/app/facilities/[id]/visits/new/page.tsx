@@ -32,15 +32,22 @@ export default async function NewVisitPage({ params }: Props) {
       return;
     }
 
-    await prisma.visit.create({
-      data: {
-        facilityId: Number(id),
-        userId: 1,
-        visitDate: new Date(visitDate),
-        rating: rating,
-        comment: comment || null,
-      },
-    });
+    // DBから存在するユーザーを1人取得
+const defaultUser = await prisma.user.findFirst();
+
+if (!defaultUser) {
+  throw new Error('ユーザーが存在しません。先に seed を実行してください。');
+}
+
+await prisma.visit.create({
+  data: {
+    facilityId: Number(id),
+    userId: defaultUser.id, // ← 動的に取得したユーザーIDをセット
+    visitDate: new Date(visitDate),
+    rating: rating,
+    comment: comment || null,
+  },
+});
 
     // 登録完了後、施設詳細画面へリダイレクト
     redirect(`/facilities/${id}`);
