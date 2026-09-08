@@ -1,0 +1,100 @@
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { prisma } from '@/lib/prisma';
+
+interface Props {
+  params: Promise<{
+    id: string;
+  }>;
+}
+
+export default async function FacilityDetailPage({ params }: Props) {
+  const { id } = await params;
+
+  // DBから対象施設と関連する訪問ログ・タグを取得
+  const facility = await prisma.facility.findUnique({
+    where: { id :Number(id) },
+    include: {
+      tags: {
+        include: { tag: true },
+      },
+      visits: {
+        orderBy: { visitDate: 'desc' },
+      },
+    },
+  });
+
+  // 施設が存在しない場合は 404 画面へ
+  if (!facility) {
+    notFound();
+  }
+
+  return (
+    <main style={{ padding: '20px', fontFamily: 'sans-serif' }}>
+      {/* 戻る導線 */}
+      <div>
+        <Link href="/facilities">
+          <button style={{ padding: '5px 10px', cursor: 'pointer', marginBottom: '20px' }}>
+            ← 施設一覧に戻る
+          </button>
+        </Link>
+      </div>
+
+      {/* 施設基本情報 */}
+      <h1>{facility.name}</h1>
+      <p><strong>都道府県:</strong> {facility.prefecture}</p>
+
+      {/* タグ一覧 */}
+      {facility.tags.length > 0 && (
+        <p>
+          <strong>特徴タグ:</strong>{' '}
+          {facility.tags.map(({ tag }) => `#${tag.name}`).join(' ')}
+        </p>
+      )}
+
+      <hr style={{ margin: '20px 0' }} />
+
+      {/* 訪問ログヘッダーと新規ログ追加ボタン */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2>訪問ログ ({facility.visits.length}件)</h2>
+        <Link href={`/facilities/${facility.id}/visits/new`}>
+          <button style={{ padding: '8px 12px', cursor: 'pointer' }}>
+            ＋ この施設の訪問ログを追加
+          </button>
+        </Link>
+      </div>
+
+      {/* 訪問ログ一覧 */}
+      {facility.visits.length === 0 ? (
+        <p>まだ訪問ログがありません。</p>
+      ) : (
+        <ul style={{ listStyle: 'none', padding: 0 }}>
+          {facility.visits.map((visit) => (
+            <li
+              key={visit.id}
+              style={{
+                border: '1px solid #ccc',
+                padding: '15px',
+                marginBottom: '10px',
+                borderRadius: '5px',
+              }}
+            >
+              <p>
+                <strong>訪問日:</strong>{' '}
+                {new Date(visit.visitDate).toLocaleDateString('ja-JP')}
+              </p>
+              <p>
+                <strong>評価:</strong> {'★'.repeat(visit.rating)} ({visit.rating} / 5)
+              </p>
+              {visit.comment && (
+                <p>
+                  <strong>コメント:</strong> {visit.comment}
+                </p>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </main>
+  );
+}
