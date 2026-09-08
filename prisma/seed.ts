@@ -15,11 +15,17 @@ async function main() {
   await prisma.user.deleteMany();
 
   // ユーザーを作成
-  const user1 = await prisma.user.create({
-    data: { email: 'taro@example.com', name: 'サウナ太郎' },
-  });
-  const user2 = await prisma.user.create({
-    data: { email: 'hanako@example.com', name: '温泉花子' },
+  await prisma.user.createMany({
+    data: [
+      { email: 'taro@example.com', name: 'サウナ太郎' },
+      { email: 'hanako@example.com', name: '温泉花子' },
+      { email: 'totonoi_ken@example.com', name: '宮澤和也' },
+      { email: 'furo_suki@example.com', name: '西輔皓輔' },
+      { email: 'yudono_misa@example.com', name: '小松拓' },
+      { email: 'spa_master@example.com', name: '残熊いち郎' },
+      { email: 'roten_daisuki@example.com', name: '吉田瑛人' },
+      { email: 'mizuburo_love@example.com', name: '高橋真聡' },
+    ]
   });
 
   // タグを作成
@@ -39,7 +45,7 @@ async function main() {
   // 施設を作成
   const facility1 = await prisma.facility.create({
     data: {
-      userId: user1.id,
+      userId: 3,
       name: '黄金の湯 スパリゾート',
       prefecture: '東京都',
       address: '東京都江東区豊洲1-2-3',
@@ -49,7 +55,7 @@ async function main() {
 
   const facility2 = await prisma.facility.create({
     data: {
-      userId: user2.id,
+      userId: 8,
       name: '富士見サウナヘブン',
       prefecture: '静岡県',
       address: '静岡県富士宮市100',
@@ -72,7 +78,7 @@ async function main() {
   // 訪問記録を作成
   const visit1 = await prisma.visit.create({
     data: {
-      userId: user1.id,
+      userId: 3,
       facilityId: facility1.id,
       visitDate: new Date('2024-02-10'),
       fee: 1500,
@@ -83,7 +89,7 @@ async function main() {
 
   const visit2 = await prisma.visit.create({
     data: {
-      userId: user2.id,
+      userId: 8,
       facilityId: facility2.id,
       visitDate: new Date('2024-03-01'),
       fee: 2000,
