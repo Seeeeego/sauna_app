@@ -19,12 +19,12 @@ async function main() {
     data: [
       { email: 'taro@example.com', name: 'サウナ太郎' },
       { email: 'hanako@example.com', name: '温泉花子' },
-      { email: 'totonoi_ken@example.com', name: '宮澤和也' },
-      { email: 'furo_suki@example.com', name: '西輔皓輔' },
-      { email: 'yudono_misa@example.com', name: '小松拓' },
-      { email: 'spa_master@example.com', name: '残熊いち郎' },
-      { email: 'roten_daisuki@example.com', name: '吉田瑛人' },
-      { email: 'mizuburo_love@example.com', name: '高橋真聡' },
+      { email: 'totonoi_ken@example.com', name: '宮島数郎' },
+      { email: 'furo_suki@example.com', name: '東栄介' },
+      { email: 'yudono_misa@example.com', name: '小杉ブラまよ' },
+      { email: 'spa_master@example.com', name: '残馬二浪' },
+      { email: 'roten_daisuki@example.com', name: '吉岡ひでひと' },
+      { email: 'mizuburo_love@example.com', name: '高脚ざむらい' },
     ]
   });
 
