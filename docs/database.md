@@ -6,10 +6,15 @@ erDiagram
         VARCHER(50) email  "連絡先"
     }
     
+    prefectures {
+        SERIAL  id  PK  "都道府県id"
+        VARCHAER(5) name "都道府県名"
+    }
+
     facilities {
         INTEGER id PK "施設ID"
         VARCHAER(50) name "施設名"
-        VARCHER(20) prefecture "都道府県名"
+        INTEGER prefecture_id FK "都道府県id"
         VARCHAER(200) address "住所"
         INTEGER user_id  FK "登録者"
         VARCHAR(200) hp_url "施設hpリンク"
@@ -49,6 +54,7 @@ erDiagram
     facilities ||--o{ facility_tags : ""
     tags ||--o{ facility_tags : ""
     visits ||--o{ visit_images : "保持する"
+    prefectures ||--o{ facilities: "保持する"
 ```
 
 <!-- テーブル名、カラム名、データ型、制約（必須項目など） -->
@@ -70,7 +76,7 @@ erDiagram
 | :--- | :--- | :--- | :--- |
 | `id` | SERIAL | PRIMARY KEY | 自動連番 |
 | `name` | VARCHAR(50) | NOT NULL | 施設名 |
-| `prefecture` | VARCHAR(20) | NOT NULL | 都道府県（検索・地図UI連動用） |
+| `prefecture_id` | INTEGER | FOREIGN KEY | 都道府県（検索・地図UI連動用） |
 | `address` | VARCHAR(200) | | 詳細な住所 |
 | `user_id` | INTEGER | FOREIGN KEY | 施設を初登録したユーザーのID |
 | `hp_url` | VARCHAR(200) | UNIQUE | 施設ホームページへのリンク |
@@ -118,6 +124,14 @@ erDiagram
 | `image_url` | VARCHAR(2048) | | 思い出の画像（S3等のURLを想定） |
 | `created_at` | TIMESTAMP | DEFAULT NOW() | 作成日時 |
 
+### 2.7 prefectures(都道府県テーブル)
+都道府県をidで管理
+
+| カラム名 | データ型 | 制約 | 備考 |
+| :--- | :--- | :--- | :--- |
+| `prefecture_id` | SERIAL | PRIMARY KEY | 都道府県ID |
+| `prefecture_name` | VARCHAR(5) | UNIQUE | 都道府県名 |
+
 ## 3.テーブル間リレーション一覧
 
 | 親テーブル | 子テーブル | リレーション種別 | 統合キー(FK) | 概要 |
@@ -128,5 +142,6 @@ erDiagram
 | facilities | visits | 1 対 多 (1:N) | visits.facility_id | 1つの施設は複数の訪問記録を保持する |
 | facilities | facility_tags | 1 対 多 (1:N) | facility_tags.facility_id | 1つの施設は複数のタグを持てる |
 | tags | facility_tags | 1 対 多 (1:N) | facility_tags.tag_id | 1つのタグは複数の施設に付けられる |
+| prefectures | facilities | 1 対 多 (1:N) | facilities.prefecture_id | 1つの都道府県は複数の施設を持てる |
 
 
