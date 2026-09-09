@@ -16,6 +16,8 @@ export default async function NewFacilityPage() {
     const name = formData.get('name') as string;
     const prefectureIdStr = formData.get('prefectureId') as string;
     const prefectureId = Number(prefectureIdStr);
+    const address = formData.get('address') as string;
+    const hpUrl = formData.get('hpUrl') as string;
 
     if (!name || isNaN(prefectureId)) {
       return;
@@ -33,9 +35,9 @@ export default async function NewFacilityPage() {
       data: {
         name,
         prefectureId,
-        // createdBy または userId に取得したユーザーの ID を設定
-        // ※スキーマの定義名に合わせて選択（どちらか一方）
-        userId: defaultUser.id, 
+        address: address || null,
+        hpUrl: hpUrl || null,
+        userId: defaultUser.id,
       },
     });
 
@@ -81,7 +83,31 @@ export default async function NewFacilityPage() {
 
         <br />
 
-        <button type="submit">施設を登録する</button>
+        <div>
+          <label htmlFor="address">詳細な住所（任意）: </label>
+          <input
+            type="text"
+            id="address"
+            name="address"
+            placeholder="例: 豊島区池袋2-7-7"
+          />
+        </div>
+
+        <br />
+
+        <div>
+          <label htmlFor="hpUrl">ホームページURL（任意）: </label>
+          <input
+            type="url"
+            id="hpUrl"
+            name="hpUrl"
+            placeholder="https://example.com"
+          />
+        </div>
+
+        <br />
+
+        <button type="submit">登録する</button>
       </form>
     </main>
   );
