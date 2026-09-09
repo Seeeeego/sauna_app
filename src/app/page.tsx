@@ -1,6 +1,16 @@
 import JapanMap from '@/components/JapanMap';
+import { prisma } from '@/lib/prisma';
 
-export default function HomePage() {
+export default async function HomePage() {
+  // DBから都道府県データ（id, name）を全件取得
+  const prefectures = await prisma.prefecture.findMany({
+    select: {
+      id: true,
+      name: true,
+    },
+    orderBy: { id: 'asc' },
+  });
+
   return (
     <main className="min-h-screen bg-slate-50 py-12 px-4">
       <div className="max-w-5xl mx-auto space-y-8">
@@ -13,8 +23,7 @@ export default function HomePage() {
           </p>
         </header>
 
-        {/* 日本地図コンポーネント */}
-        <JapanMap />
+        <JapanMap prefectures={prefectures} />
       </div>
     </main>
   );

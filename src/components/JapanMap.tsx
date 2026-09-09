@@ -4,13 +4,30 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { REGIONS, Region } from '@/constants/japan';
 
-export default function JapanMap() {
+// 都道府県データの型定義
+type Prefecture = {
+  id: number;
+  name: string;
+};
+
+type JapanMapProps = {
+  prefectures: Prefecture[];
+};
+
+export default function JapanMap({ prefectures }: JapanMapProps) {
   const router = useRouter();
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
 
+  // 都道府県名から ID を取得して prefectureId クエリで遷移するハンドラー
   const handlePrefClick = (prefName: string) => {
-    // 選択された都道府県の施設一覧ページへ遷移
-    router.push(`/facilities?prefecture=${encodeURIComponent(prefName)}`);
+    const targetPref = prefectures.find((p) => p.name === prefName);
+
+    if (targetPref) {
+      router.push(`/facilities?prefectureId=${targetPref.id}`);
+    } else {
+      // フォールバック（万が一見つからない場合は全件一覧へ）
+      router.push('/facilities');
+    }
   };
 
   return (
