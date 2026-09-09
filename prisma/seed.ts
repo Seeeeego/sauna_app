@@ -12,6 +12,7 @@ async function main() {
   await prisma.facilityTag.deleteMany();
   await prisma.tag.deleteMany();
   await prisma.facility.deleteMany();
+  await prisma.prefecture.deleteMany();
   await prisma.user.deleteMany();
 
   // ユーザーを作成
@@ -27,6 +28,40 @@ async function main() {
       { email: 'mizuburo_love@example.com', name: '高脚ざむらい' },
     ]
   });
+
+  // 都道府県を作成
+  await prisma.prefecture.createMany({
+    data:[
+      // 1(1)
+      {name: '北海道'},
+
+      // 6(7)
+      {name: "青森県"},{name: "岩手県"},{name: "宮城県"},{name: "秋田県"},
+      {name: "山形県"},{name: "福島県"},
+
+      // 7(14)
+      {name: "茨城県"},{name: "栃木県"},{name: "群馬県"},{name: "埼玉県"},
+      {name: "千葉県"},{name: "東京都"},{name: "神奈川県"},
+
+      // 9(23)
+      {name: "新潟県"},{name: "富山県"},{name: "石川県"},{name: "福井県"},
+      {name: "山梨県"},{name: "長野県"},{name: "岐阜県"},{name: "静岡県"},{name: "愛知県"},
+
+      // 7(30)
+      {name: "三重県"},{name: "滋賀県"},{name: "京都府"},{name: "大阪府"},
+      {name: "兵庫県"},{name: "奈良県"},{name: "和歌山県"},
+
+      // 5(35)
+      {name: "鳥取県"},{name: "島根県"},{name: "岡山県"},{name: "広島県"},{name: "山口県"},
+
+      // 4(39)
+      {name: "徳島県"},{name: "香川県"},{name: "愛媛県"},{name: "高知県"},
+
+      // 8(47)
+      {name: "福岡県"},{name: "佐賀県"},{name: "長崎県"},{name: "熊本県"},
+      {name: "大分県"},{name: "宮崎県"},{name: "鹿児島県"},{name: "沖縄県"}
+    ]
+  })
 
   // タグを作成
   const tagSauna = await prisma.tag.create({
@@ -47,7 +82,7 @@ async function main() {
     data: {
       userId: 3,
       name: '黄金の湯 スパリゾート',
-      prefecture: '東京都',
+      prefectureId: 13,
       address: '東京都江東区豊洲1-2-3',
       hpUrl: 'https://example.com/kogane',
     },
@@ -57,7 +92,7 @@ async function main() {
     data: {
       userId: 8,
       name: '富士見サウナヘブン',
-      prefecture: '静岡県',
+      prefectureId: 22,
       address: '静岡県富士宮市100',
       hpUrl: 'https://example.com/fujimi',
     },
