@@ -2,15 +2,22 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 
-export default function NewFacilityPage() {
+export default async function NewFacilityPage() {
+
+  // 都道府県一覧を DB から取得
+  const prefectures = await prisma.prefecture.findMany({
+    orderBy: { id: 'asc' },
+  });
+
   // 施設登録処理
   async function createFacility(formData: FormData) {
     'use server';
 
     const name = formData.get('name') as string;
-    const prefecture = formData.get('prefecture') as string;
+    const prefectureIdStr = formData.get('prefectureId') as string;
+    const prefectureId = Number(prefectureIdStr);
 
-    if (!name || !prefecture) {
+    if (!name || isNaN(prefectureId)) {
       return;
     }
 
@@ -25,7 +32,7 @@ export default function NewFacilityPage() {
     await prisma.facility.create({
       data: {
         name,
-        prefecture,
+        prefectureId,
         // createdBy または userId に取得したユーザーの ID を設定
         // ※スキーマの定義名に合わせて選択（どちらか一方）
         userId: defaultUser.id, 
@@ -59,14 +66,16 @@ export default function NewFacilityPage() {
         <br />
 
         <div>
-          <label htmlFor="prefecture">都道府県: </label>
-          <select id="prefecture" name="prefecture" required>
-            <option value="">選択してください</option>
-            <option value="東京都">東京都</option>
-            <option value="神奈川県">神奈川県</option>
-            <option value="埼玉県">埼玉県</option>
-            <option value="千葉県">千葉県</option>
-            <option value="静岡県">静岡県</option>
+          <label htmlFor="prefectureId">都道府県: </label>
+          <select id="prefectureId" name="prefectureId" required defaultValue="">
+            <option value="" disabled>
+              選択してください
+            </option>
+            {prefectures.map((pref) => (
+              <option key={pref.id} value={pref.id}>
+                {pref.name}
+              </option>
+            ))}
           </select>
         </div>
 
