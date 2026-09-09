@@ -15,15 +15,24 @@ model User {
   visits     Visit[]
 }
 
+model Prefecture {
+  id        Int         @id @default(autoincrement())
+  name      String      @db.VarChar(5)
+
+  facilities Facility[]
+}
+
 model Facility {
   id         Int           @id @default(autoincrement())
   name       String        @db.VarChar(50)
-  prefecture String        @db.VarChar(20)
   address    String?       @db.VarChar(200)
   hpUrl      String?       @db.VarChar(200)
   
   userId     Int
   createdBy  User          @relation(fields: [userId], references: [id])
+
+  prefectureId     Int
+  prefecture  Prefecture    @relation(fields: [prefectureId], references: [id])
   
   createdAt  DateTime      @default(now())
   updatedAt  DateTime      @updatedAt
@@ -31,7 +40,7 @@ model Facility {
   visits     Visit[]
   tags       FacilityTag[]
 
-  @@index([prefecture])
+  @@index([prefectureId])
 }
 
 model Tag {
