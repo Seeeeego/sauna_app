@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 
-interface Props {
+type Props = {
   params: Promise<{
     id: string;
   }>;
@@ -10,11 +10,18 @@ interface Props {
 
 export default async function FacilityDetailPage({ params }: Props) {
   const { id } = await params;
+  const facilityId = Number(id);
+
+  // 数値に変換できない場合は 404 画面へ
+  if (isNaN(facilityId)) {
+    notFound();
+  }
 
   // DBから対象施設と関連する訪問ログ・タグを取得
   const facility = await prisma.facility.findUnique({
     where: { id :Number(id) },
     include: {
+      prefecture: true,
       tags: {
         include: { tag: true },
       },
@@ -42,7 +49,7 @@ export default async function FacilityDetailPage({ params }: Props) {
 
       {/* 施設基本情報 */}
       <h1>{facility.name}</h1>
-      <p><strong>都道府県:</strong> {facility.prefecture}</p>
+      <p><strong>都道府県:</strong> {facility.prefecture.name}</p>
 
       {/* タグ一覧 */}
       {facility.tags.length > 0 && (
