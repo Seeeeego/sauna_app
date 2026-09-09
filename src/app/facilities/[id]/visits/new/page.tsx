@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 
-interface Props {
+type Props = {
   params: Promise<{
     id: string;
   }>;
@@ -10,10 +10,11 @@ interface Props {
 
 export default async function NewVisitPage({ params }: Props) {
   const { id } = await params;
+  const facilityId = Number(id);
 
   // 対象の施設が存在するか確認
   const facility = await prisma.facility.findUnique({
-    where: { id :Number(id) },
+    where: { id : facilityId },
   });
 
   if (!facility) {
@@ -26,7 +27,11 @@ export default async function NewVisitPage({ params }: Props) {
 
     const visitDate = formData.get('visitDate') as string;
     const rating = Number(formData.get('rating'));
+    const feeStr = formData.get('fee') as string;
     const comment = formData.get('comment') as string;
+    const imageUrl = formData.get('imageUrl') as string;
+
+    const fee = feeStr ? Number(feeStr) : null;
 
     if (!visitDate || !rating) {
       return;
@@ -39,15 +44,24 @@ if (!defaultUser) {
   throw new Error('ユーザーが存在しません。先に seed を実行してください。');
 }
 
-await prisma.visit.create({
-  data: {
-    facilityId: Number(id),
-    userId: defaultUser.id, // ← 動的に取得したユーザーIDをセット
-    visitDate: new Date(visitDate),
-    rating: rating,
-    comment: comment || null,
-  },
-});
+// Visit の作成（画像URLが存在する場合は VisitImage にも同時に登録）
+    await prisma.visit.create({
+      data: {
+        facilityId,
+        userId: defaultUser.id,
+        visitDate: new Date(visitDate),
+        rating,
+        fee,
+        comment: comment || null,
+        ...(imageUrl && {
+          images: {
+            create: {
+              imageUrl,
+            },
+          },
+        }),
+      },
+    });
 
     // 登録完了後、施設詳細画面へリダイレクト
     redirect(`/facilities/${id}/visits/success`);
@@ -107,6 +121,21 @@ await prisma.visit.create({
           </select>
         </div>
 
+        {/* 利用料金 (任意) */}
+        <div>
+          <label htmlFor="fee" style={{ display: 'block', fontWeight: 'bold' }}>
+            利用料金 (円) (任意):
+          </label>
+          <input
+            type="number"
+            id="fee"
+            name="fee"
+            placeholder="例: 1500"
+            min="0"
+            style={{ width: '100%', padding: '5px' }}
+          />
+        </div>
+
         {/* コメント */}
         <div>
           <label htmlFor="comment" style={{ display: 'block', fontWeight: 'bold' }}>
@@ -121,10 +150,24 @@ await prisma.visit.create({
           />
         </div>
 
+        {/* 画像URL (任意) */}
+        <div>
+          <label htmlFor="imageUrl" style={{ display: 'block', fontWeight: 'bold' }}>
+            画像URL (任意):
+          </label>
+          <input
+            type="url"
+            id="imageUrl"
+            name="imageUrl"
+            placeholder="https://example.com/image.jpg"
+            style={{ width: '100%', padding: '5px' }}
+          />
+        </div>
+
         {/* 送信ボタン */}
         <div>
           <button type="submit" style={{ padding: '10px 15px', cursor: 'pointer' }}>
-            訪問ログを保存する
+            保存する
           </button>
         </div>
 
