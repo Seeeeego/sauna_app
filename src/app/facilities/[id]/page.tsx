@@ -51,6 +51,21 @@ export default async function FacilityDetailPage({ params }: Props) {
       <h1>{facility.name}</h1>
       <p><strong>都道府県:</strong> {facility.prefecture.name}</p>
 
+      {/* 詳細な住所（任意項目のため存在時のみ表示） */}
+      {facility.address && (
+        <p><strong>住所:</strong> {facility.address}</p>
+      )}
+
+      {/* ホームページURL（任意項目のため存在時のみ表示） */}
+      {facility.hpUrl && (
+        <p>
+          <strong>公式HP:</strong>{' '}
+          <a href={facility.hpUrl} target="_blank" rel="noopener noreferrer">
+            {facility.hpUrl}
+          </a>
+        </p>
+      )}
+      
       {/* タグ一覧 */}
       {facility.tags.length > 0 && (
         <p>
