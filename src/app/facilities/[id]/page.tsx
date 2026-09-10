@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import Image from 'next/image';
 
@@ -42,7 +42,37 @@ export default async function FacilityDetailPage({ params, searchParams }: Props
     notFound();
   }
 
-  // 
+  // 施設削除処理 (Server Action)
+  async function deleteFacility() {
+    'use server';
+
+    // 1. 施設に紐づく訪問ログの件数をカウント
+    const visitCount = await prisma.visit.count({
+      where: { facilityId },
+    });
+
+    // 2. 訪問ログが1件以上存在する場合は削除をブロックする
+    if (visitCount > 0) {
+      // ログが存在する場合は削除せず処理を中断
+      // ※より丁寧にする場合は、エラーメッセージを画面へ返却・表示させるかクエリで通知する
+      console.warn(`施設ID: ${facilityId} は訪問ログが ${visitCount} 件存在するため削除できません。`);
+      return;
+    }
+
+    // 3. 訪問ログが 0 件の場合のみ削除を実行
+    await prisma.facility.delete({
+      where: { id: facilityId },
+    });
+
+    // 削除後は一覧画面へリダイレクト
+    const redirectUrl = prefectureId
+      ? `/facilities?prefectureId=${prefectureId}`
+      : '/facilities';
+
+    redirect(redirectUrl);
+  }
+
+  // ページ遷移する際にprefectureIdを持たせる
   const backUrl = prefectureId
   ? `/facilities?prefectureId=${prefectureId}` : '/facilities';
 
@@ -68,6 +98,29 @@ export default async function FacilityDetailPage({ params, searchParams }: Props
               編集
             </button>
           </Link>
+          
+          {/* 削除ボタンの箇所 */}
+      <form action={deleteFacility}>
+        <button
+          type="submit"
+          /* ログが存在する場合はUI上でボタンを押せない */
+          disabled={facility.visits.length > 0}
+          style={{
+            padding: '5px 10px',
+            cursor: facility.visits.length > 0 ? 'not-allowed' : 'pointer',
+            backgroundColor: facility.visits.length > 0 ? '#e0e0e0' : '#ffebee',
+            color: facility.visits.length > 0 ? '#9e9e9e' : '#c62828',
+            border: '1px solid #ef9a9a',
+          }}
+          title={
+            facility.visits.length > 0
+              ? '訪問ログが存在する施設は削除できません'
+              : '施設を削除します'
+          }
+        >
+          🗑️ 削除
+        </button>
+      </form>
         </div>
       </div>
 
