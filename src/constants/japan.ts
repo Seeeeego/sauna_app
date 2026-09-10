@@ -4,7 +4,7 @@ export interface Prefecture {
   region: string;
 }
 
-export interface Region {
+export type Region = {
   id: string;
   name: string;
   color: string; // Tailwindカラー
