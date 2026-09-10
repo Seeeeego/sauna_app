@@ -46,6 +46,11 @@ export default async function FacilityDetailPage({ params, searchParams }: Props
   const backUrl = prefectureId
   ? `/facilities?prefectureId=${prefectureId}` : '/facilities';
 
+  // 編集画面へ遷移するURL（prefectureIdを引き継ぐ）
+  const editUrl = prefectureId
+    ? `/facilities/${facility.id}/edit?prefectureId=${prefectureId}`
+    : `/facilities/${facility.id}/edit`;
+
   return (
     <main style={{ padding: '20px', fontFamily: 'sans-serif' }}>
       {/* 戻る導線 */}
@@ -55,6 +60,15 @@ export default async function FacilityDetailPage({ params, searchParams }: Props
             ← 施設一覧に戻る
           </button>
         </Link>
+
+        {/* 編集ボタン */}
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <Link href={editUrl}>
+            <button style={{ padding: '5px 10px', cursor: 'pointer' }}>
+              編集
+            </button>
+          </Link>
+        </div>
       </div>
 
       {/* 施設基本情報 */}
