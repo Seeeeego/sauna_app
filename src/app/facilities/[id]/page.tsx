@@ -116,7 +116,7 @@ export default async function FacilityDetailPage({ params }: Props) {
                 </p>
               )}
 
-              {/* 👇 訪問画像の表示を追加 */}
+              {/*  訪問画像の表示 */}
               {visit.images && visit.images.length > 0 && (
                 <div style={{ marginTop: '12px' }}>
                   <strong>画像:</strong>
