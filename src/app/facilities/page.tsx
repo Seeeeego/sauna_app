@@ -89,7 +89,11 @@ export default async function FacilitiesPage(props: {
 
               {/* 詳細画面への遷移ボタン */}
               <div style={{ marginTop: '10px' }}>
-                <Link href={`/facilities/${facility.id}`}>
+                <Link href={
+                prefectureId
+                  ? `/facilities/${facility.id}?prefectureId=${prefectureId}`
+                  : `/facilities/${facility.id}`
+              }>
                   <button style={{ padding: '5px 10px', cursor: 'pointer' }}>
                     詳細を見る →
                   </button>

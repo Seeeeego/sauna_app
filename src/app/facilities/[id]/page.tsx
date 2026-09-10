@@ -7,14 +7,14 @@ type Props = {
   params: Promise<{
     id: string;
   }>;
-  searchparams?: Promise<{
+  searchParams?: Promise<{
     prefectureId?: string;
   }>;
 }
 
-export default async function FacilityDetailPage({ params, searchparams }: Props) {
+export default async function FacilityDetailPage({ params, searchParams }: Props) {
   const { id } = await params;
-  const { prefectureId } = await searchparams ?? {};
+  const { prefectureId } = await searchParams ?? {};
   const facilityId = Number(id);
 
   // 数値に変換できない場合は 404 画面へ
