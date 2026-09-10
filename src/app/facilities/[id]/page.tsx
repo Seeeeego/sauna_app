@@ -7,10 +7,14 @@ type Props = {
   params: Promise<{
     id: string;
   }>;
+  searchparams?: Promise<{
+    prefectureId?: string;
+  }>;
 }
 
-export default async function FacilityDetailPage({ params }: Props) {
+export default async function FacilityDetailPage({ params, searchparams }: Props) {
   const { id } = await params;
+  const { prefectureId } = await searchparams ?? {};
   const facilityId = Number(id);
 
   // 数値に変換できない場合は 404 画面へ
@@ -38,11 +42,15 @@ export default async function FacilityDetailPage({ params }: Props) {
     notFound();
   }
 
+  // 
+  const backUrl = prefectureId
+  ? `/facilities?prefectureId=${prefectureId}` : '/facilities';
+
   return (
     <main style={{ padding: '20px', fontFamily: 'sans-serif' }}>
       {/* 戻る導線 */}
       <div>
-        <Link href="/facilities">
+        <Link href= {backUrl}>
           <button style={{ padding: '5px 10px', cursor: 'pointer', marginBottom: '20px' }}>
             ← 施設一覧に戻る
           </button>
