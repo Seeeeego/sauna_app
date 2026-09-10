@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
+import Image from 'next/image';
 
 type Props = {
   params: Promise<{
@@ -27,6 +28,7 @@ export default async function FacilityDetailPage({ params }: Props) {
       },
       visits: {
         orderBy: { visitDate: 'desc' },
+        include: { images: true, }
       },
     },
   });
@@ -112,6 +114,29 @@ export default async function FacilityDetailPage({ params }: Props) {
                 <p>
                   <strong>コメント:</strong> {visit.comment}
                 </p>
+              )}
+
+              {/* 👇 訪問画像の表示を追加 */}
+              {visit.images && visit.images.length > 0 && (
+                <div style={{ marginTop: '12px' }}>
+                  <strong>画像:</strong>
+                  <div style={{ display: 'flex', gap: '10px', marginTop: '8px', flexWrap: 'wrap' }}>
+                    {visit.images.map((image) => (
+                      <Image
+                      key={image.id}
+                      src={image.imageUrl}
+                      alt="訪問写真"
+                      width={120}
+                      height={120}
+                      style={{
+                        objectFit: 'cover',
+                        borderRadius: '4px',
+                        border: '1px solid #eee',
+                      }}
+                      />
+                    ))}
+                  </div>
+                </div>
               )}
             </li>
           ))}

@@ -194,15 +194,15 @@ async function main() {
     data: [
       {
         visitId: visit1.id,
-        imageUrl: '/images/visits/kogane_exterior.jpg',
+        imageUrl: '/sample-hot-spring.png',
       },
       {
         visitId: visit1.id,
-        imageUrl: '/images/visits/kogane_saunameshi.jpg',
+        imageUrl: '/next.svg',
       },
       {
         visitId: visit2.id,
-        imageUrl: '/images/visits/fujimi_sauna.jpg',
+        imageUrl: '/window.svg',
       },
     ],
   });
