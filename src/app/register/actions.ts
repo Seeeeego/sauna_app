@@ -1,4 +1,3 @@
-// src/app/register/actions.ts
 'use server';
 
 import { redirect } from 'next/navigation';
@@ -12,6 +11,7 @@ export async function registerAction(
   prevState: RegisterState,
   formData: FormData
 ): Promise<RegisterState> {
+    // trim()：先頭,末尾の不要な空白を自動で取り除く
   const name = (formData.get('name') as string)?.trim();
   const email = (formData.get('email') as string)?.trim();
 
