@@ -31,5 +31,5 @@ export async function loginAction(
   }
 
   // ログイン成功：URLクエリパラメータに userId を付与してトップページへリダイレクト
-  redirect(`/?userId=${user.id}`);
+  redirect(`/top?userId=${user.id}`);
 }

@@ -10,24 +10,33 @@ type Prefecture = {
   name: string;
 };
 
+// 1. Props に userId を追加
 type JapanMapProps = {
   prefectures: Prefecture[];
+  userId?: string;
 };
 
-export default function JapanMap({ prefectures }: JapanMapProps) {
+export default function JapanMap({ prefectures, userId }: JapanMapProps) {
   const router = useRouter();
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
 
-  // 都道府県名から ID を取得して prefectureId クエリで遷移するハンドラー
+  // 都道府県名から ID を取得して prefectureId と userId クエリで遷移するハンドラー
   const handlePrefClick = (prefName: string) => {
     const targetPref = prefectures.find((p) => p.name === prefName);
 
+    // 2. URLクエリパラメーターの組み立て
+    const params = new URLSearchParams();
     if (targetPref) {
-      router.push(`/facilities?prefectureId=${targetPref.id}`);
-    } else {
-      // フォールバック（万が一見つからない場合は全件一覧へ）
-      router.push('/facilities');
+      params.set('prefectureId', String(targetPref.id));
     }
+    if (userId) {
+      params.set('userId', userId);
+    }
+
+    const queryString = params.toString();
+    const targetUrl = queryString ? `/facilities?${queryString}` : '/facilities';
+
+    router.push(targetUrl);
   };
 
   return (
