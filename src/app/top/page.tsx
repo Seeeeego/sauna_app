@@ -1,7 +1,20 @@
+import { redirect } from 'next/navigation';
 import JapanMap from '@/components/JapanMap';
 import { prisma } from '@/lib/prisma';
 
-export default async function HomePage() {
+type Props = {
+  searchParams?: Promise<{
+    userId?: string;
+  }>;
+};
+
+export default async function HomePage({ searchParams }: Props) {
+  const { userId } = await searchParams ?? {};
+
+  if (!userId) {
+    redirect('/');
+  }
+
   // DBから都道府県データ（id, name）を全件取得
   const prefectures = await prisma.prefecture.findMany({
     select: {
@@ -23,7 +36,8 @@ export default async function HomePage() {
           </p>
         </header>
 
-        <JapanMap prefectures={prefectures} />
+        {/* 3. JapanMap に userId を渡す */}
+        <JapanMap prefectures={prefectures} userId={userId} />
       </div>
     </main>
   );

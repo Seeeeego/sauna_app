@@ -6,15 +6,24 @@ type Props = {
   params: Promise<{
     id: string;
   }>;
-}
+  searchParams?: Promise<{
+    prefectureId?: string;
+    userId?: string; 
+  }>;
+};
 
-export default async function NewVisitPage({ params }: Props) {
+export default async function NewVisitPage({ params, searchParams }: Props) {
   const { id } = await params;
+  const { prefectureId, userId } = (await searchParams) ?? {}; 
   const facilityId = Number(id);
+
+  if (!userId) {
+    redirect('/');
+  }
 
   // 対象の施設が存在するか確認
   const facility = await prisma.facility.findUnique({
-    where: { id : facilityId },
+    where: { id: facilityId },
   });
 
   if (!facility) {
@@ -28,27 +37,30 @@ export default async function NewVisitPage({ params }: Props) {
     const visitDate = formData.get('visitDate') as string;
     const rating = Number(formData.get('rating'));
     const feeStr = formData.get('fee') as string;
-    const comment = formData.get('comment') as string;
-    const imageUrl = formData.get('imageUrl') as string;
+    const comment = (formData.get('comment') as string)?.trim(); 
+    const imageUrl = (formData.get('imageUrl') as string)?.trim();
+    const actionUserId = Number(formData.get('userId')); // hiddenからuserIdを取得
 
     const fee = feeStr ? Number(feeStr) : null;
 
-    if (!visitDate || !rating) {
+    if (!visitDate || !rating || !actionUserId) {
       return;
     }
 
-    // DBから存在するユーザーを1人取得
-const defaultUser = await prisma.user.findFirst();
+    // DB上のユーザーが存在するか確認（不正なuserId改ざんのチェック）
+    const user = await prisma.user.findUnique({
+      where: { id: actionUserId },
+    });
 
-if (!defaultUser) {
-  throw new Error('ユーザーが存在しません。先に seed を実行してください。');
-}
+    if (!user) {
+      throw new Error('ユーザーが存在しません。');
+    }
 
-// Visit の作成（画像URLが存在する場合は VisitImage にも同時に登録）
+    // Visit の作成（送られてきた userId を指定）
     await prisma.visit.create({
       data: {
         facilityId,
-        userId: defaultUser.id,
+        userId: actionUserId, 
         visitDate: new Date(visitDate),
         rating,
         fee,
@@ -63,9 +75,22 @@ if (!defaultUser) {
       },
     });
 
-    // 登録完了後、施設詳細画面へリダイレクト
-    redirect(`/facilities/${id}/visits/success`);
+    // 完了画面へリダイレクト
+    const query = new URLSearchParams();
+    if (prefectureId) query.set('prefectureId', prefectureId);
+    query.set('userId', String(actionUserId));
+
+    redirect(`/facilities/${id}/visits/success?${query.toString()}`);
   }
+
+  // クエリ文字列を構築するヘルパー
+  const buildQuery = () => {
+    const query = new URLSearchParams();
+    if (prefectureId) query.set('prefectureId', prefectureId);
+    if (userId) query.set('userId', userId);
+    const str = query.toString();
+    return str ? `?${str}` : '';
+  };
 
   // 本日の日付（YYYY-MM-DD形式）を初期値用に取得
   const today = new Date().toISOString().split('T')[0];
@@ -74,7 +99,7 @@ if (!defaultUser) {
     <main style={{ padding: '20px', fontFamily: 'sans-serif' }}>
       {/* 戻るボタン */}
       <div>
-        <Link href={`/facilities/${id}`}>
+        <Link href={`/facilities/${id}${buildQuery()}`}>
           <button style={{ padding: '5px 10px', cursor: 'pointer', marginBottom: '20px' }}>
             ← 施設詳細に戻る
           </button>
@@ -86,6 +111,9 @@ if (!defaultUser) {
       {/* フォーム領域 */}
       <form action={createVisit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxWidth: '400px' }}>
         
+        {/* Server Action に userId を渡すための hidden input */}
+        <input type="hidden" name="userId" value={userId} />
+
         {/* 訪問日 */}
         <div>
           <label htmlFor="visitDate" style={{ display: 'block', fontWeight: 'bold' }}>

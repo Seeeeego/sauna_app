@@ -1,19 +1,27 @@
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 
 // クエリパラメータを受け取るための型定義
 type SearchParams = Promise<{
   prefectureId?: string;
+  userId?: string; 
 }>;
 
 export default async function FacilitiesPage(props: {
   searchParams: SearchParams;
 }) {
-  // 1. クエリパラメータから prefectureId を取得
+  // 1. クエリパラメータから prefectureId と userId を取得
   const searchParams = await props.searchParams;
   const prefectureIdParam = searchParams.prefectureId;
-  // urlから受け取る値は文字列のため数値型に変換する 
-  // -> 値が存在しないor数値に変換ができない場合は NaNに
+  const userId = searchParams.userId; 
+
+  // 未ログイン（userIdがない）場合はログイン画面へリダイレクト
+  if (!userId) {
+    redirect('/');
+  }
+
+  // urlから受け取る値は数値型に変換する
   const prefectureId = prefectureIdParam ? Number(prefectureIdParam) : NaN;
 
   // 2. 都道府県一覧を取得（ドロップダウン用）
@@ -33,12 +41,26 @@ export default async function FacilitiesPage(props: {
     orderBy: { createdAt: 'desc' },
   });
 
+  const buildQuery = (extraParams: Record<string, string | undefined> = {}) => {
+    const query = new URLSearchParams();
+    if (!isNaN(prefectureId)) query.set('prefectureId', String(prefectureId));
+    if (userId) query.set('userId', userId);
+
+    Object.entries(extraParams).forEach(([key, val]) => {
+      if (val) query.set(key, val);
+    });
+
+    const str = query.toString();
+    return str ? `?${str}` : '';
+  };
+
   return (
     <main style={{ padding: '20px', fontFamily: 'sans-serif' }}>
       {/* 画面ヘッダーと新規追加ボタン */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h1>施設一覧</h1>
-        <Link href="/facilities/new">
+        {/* ④ 新規追加ボタンに userId を引き継ぐ */}
+        <Link href={`/facilities/new${buildQuery()}`}>
           <button style={{ padding: '10px 15px', cursor: 'pointer' }}>
             ＋ 新規施設を追加
           </button>
@@ -48,6 +70,9 @@ export default async function FacilitiesPage(props: {
       {/* 都道府県絞り込みフォーム */}
       <div style={{ marginBottom: '20px' }}>
         <form action="/facilities" method="GET">
+          {/* フォーム送信時にも userId をクエリとして送る */}
+          <input type="hidden" name="userId" value={userId} />
+
           <label htmlFor="prefectureId" style={{ marginRight: '8px' }}>都道府県で絞り込み:</label>
           <select
             id="prefectureId"
@@ -89,11 +114,8 @@ export default async function FacilitiesPage(props: {
 
               {/* 詳細画面への遷移ボタン */}
               <div style={{ marginTop: '10px' }}>
-                <Link href={
-                prefectureId
-                  ? `/facilities/${facility.id}?prefectureId=${prefectureId}`
-                  : `/facilities/${facility.id}`
-              }>
+                {/* 詳細画面リンクに prefectureId と userId の両方を付与 */}
+                <Link href={`/facilities/${facility.id}${buildQuery()}`}>
                   <button style={{ padding: '5px 10px', cursor: 'pointer' }}>
                     詳細を見る →
                   </button>
