@@ -43,6 +43,8 @@ export default async function NewVisitPage({ params, searchParams }: Props) {
 
     const fee = feeStr ? Number(feeStr) : null;
 
+    // 二重チェック
+    // -> 画面を介さずデータを送りつけてくる場合を防ぐため
     if (!visitDate || !rating || !actionUserId) {
       return;
     }

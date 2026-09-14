@@ -31,56 +31,83 @@
 
 ---
 
+## 画面遷移図(メイン動線のみ)
+
+アプリの全体的な画面構成とユーザーの動線は以下の通りです。
+
+```mermaid
+graph TD
+    A[ログイン画面] --> |ログイン| B[トップ画面]
+    A --> |新規アカウント登録| C[新規ユーザー登録画面]
+    C --> |登録ボタン| D[ユーザー登録完了画面]
+    D --> |ログイン画面へ| A
+    B --> |都道府県を選択| E[施設一覧表示]
+    E --> |施設選択| F[施設詳細情報]
+    E --> |追加| G[新規施設追加画面]
+    F --> |編集| H[施設編集画面]
+    F --> |訪問ログ追加| I[訪問ログ追加画面]
+    F --> |訪問ログ編集| J[ログ編集画面]
+    H --> |完了| F
+    I --> |追加| K[ログ追加完了画面]
+    J --> |完了| F
+    G --> |新規施設登録| L[新規施設登録完了画面]
+```
+
+※ 詳細な仕様や画面ごとの要件は、[docs/screens.md](./docs/screens.md) を参照してください。
+---
+
 ## データベース設計 (ER図)
 
-データ整合性と拡張性を考慮し、全6テーブルで構成しています。
+データ整合性と拡張性を考慮し、全7テーブルで構成しています。
 
 ```mermaid
 erDiagram
     users {
-        SERIAL id PK "利用者ID"
-        VARCHAR(50) name "利用者名"
-        VARCHAR(50) email "連絡先"
+        SERIAL id PK "利用者id"
+        VARCHER(50) name "利用者名"
+        VARCHER(50) email  "連絡先"
     }
     
-    facilities {
-        SERIAL id PK "施設ID"
-        VARCHAR(50) name "施設名"
-        VARCHAR(20) prefecture "都道府県名"
-        VARCHAR(200) address "住所"
-        VARCHAR(200) hp_url "施設HPリンク"
-        INTEGER user_id FK "登録者ID"
-        TIMESTAMP created_at "登録日時"
-        TIMESTAMP updated_at "更新日時"
+    prefectures {
+        SERIAL  id  PK  "都道府県id"
+        VARCHAER(5) name "都道府県名"
     }
 
+    facilities {
+        INTEGER id PK "施設ID"
+        VARCHAER(50) name "施設名"
+        INTEGER prefecture_id FK "都道府県id"
+        VARCHAER(200) address "住所"
+        INTEGER user_id  FK "登録者"
+        VARCHAR(200) hp_url "施設hpリンク"
+        DATE created_at "登録日時"
+        DATE updeted_at "更新日時"
+    }
+    
     visits {
-        SERIAL id PK "訪問記録ID"
-        INTEGER user_id FK "訪問者ID"
-        INTEGER facility_id FK "施設ID"
+        SERIAL id PK
+        INTEGER user_id FK
+        INTEGER facility_id FK
         DATE visit_date "訪れた日"
         INTEGER fee "利用料金"
-        INTEGER rating "評価(1-5)"
+        INTEGER rating "評価"
         TEXT comment "コメント"
-        TIMESTAMP created_at "作成日時"
-        TIMESTAMP updated_at "更新日時"
+        DATE created_at "登録日時"
+        DATE updeted_at "更新日時"
     }
 
     tags {
         SERIAL id PK "タグID"
-        VARCHAR(30) name "タグ名 (例: セルフロウリュ)"
+        VARCHAR name "タグ名 (例: セルフロウリュ)"
     }
-
     facility_tags {
-        INTEGER facility_id FK "施設ID"
-        INTEGER tag_id FK "タグID"
+        INTEGER facility_id FK
+        INTEGER tag_id FK
     }
-
     visit_images {
         SERIAL id PK "画像ID"
         INTEGER visit_id FK "訪問記録ID"
-        VARCHAR(2048) image_url "画像URL"
-        TIMESTAMP created_at "作成日時"
+        VARCHAR image_url "画像URL"
     }
     
     users ||--o{ facilities : "登録する"
@@ -89,28 +116,82 @@ erDiagram
     facilities ||--o{ facility_tags : ""
     tags ||--o{ facility_tags : ""
     visits ||--o{ visit_images : "保持する"
+    prefectures ||--o{ facilities: "保持する"
 ```
 ---
 
-## <思案中> ディレクトリ構成案
+## ディレクトリ構成
 
-```text
-.
-├── docker-compose.yml
-├── prisma/
-│   └── schema.prisma         # Prismaデータモデル定義
-├── public/                   # 静的ファイル（日本地図SVG等）
-└── src/
-    ├── app/                  # Next.js App Router
-    │   ├── page.tsx          # トップ画面 (日本地図ナビゲーション)
-    │   ├── logs/
-    │   │   └── [prefecture]/ # 都道府県別 施設一覧・ソート画面
-    │   │       ├── page.tsx
-    │   │       └── new/      # 新規記録作成画面
-    │   └── layout.tsx
-    ├── components/           # UIコンポーネント (JapanMap, OnsenCard, Form等)
-    ├── lib/                  # Prismaクライアント定義・ユーティリティ関数
-    └── types/                # TypeScript型定義
+``` text
+sauna-app
+├─ Dockerfile
+├─ README.md
+├─ docker-compose.yml
+├─ docs
+│  ├─ database.md
+│  ├─ requirements.md
+│  ├─ screens.md
+│  ├─ test-case.md
+│  └─ transition-diagram.md
+├─ next.config.ts
+├─ package.json
+├─ pnpm-lock.yaml
+├─ pnpm-workspace.yaml
+├─ postcss.config.mjs
+├─ prisma
+│  ├─ migrations
+│  ├─ schema.prisma
+│  └─ seed.ts
+├─ prisma.config.ts
+├─ public
+│  ├─ file.svg
+│  ├─ globe.svg
+│  ├─ next.svg
+│  ├─ sample-hot-spring.png
+│  ├─ vercel.svg
+│  └─ window.svg
+├─ src
+│  ├─ app
+│  │  ├─ facilities
+│  │  │  ├─ [id]
+│  │  │  │  ├─ edit
+│  │  │  │  │  └─ page.tsx
+│  │  │  │  ├─ page.tsx
+│  │  │  │  └─ visits
+│  │  │  │     ├─ [visitId]
+│  │  │  │     │  └─ edit
+│  │  │  │     │     ├─ actions.ts
+│  │  │  │     │     └─ page.tsx
+│  │  │  │     ├─ new
+│  │  │  │     │  └─ page.tsx
+│  │  │  │     └─ success
+│  │  │  │        └─ page.tsx
+│  │  │  ├─ new
+│  │  │  │  └─ page.tsx
+│  │  │  ├─ page.tsx
+│  │  │  └─ success
+│  │  │     └─ page.tsx
+│  │  ├─ favicon.ico
+│  │  ├─ globals.css
+│  │  ├─ layout.tsx
+│  │  ├─ login
+│  │  │  └─ actions.ts
+│  │  ├─ page.tsx
+│  │  ├─ register
+│  │  │  ├─ actions.ts
+│  │  │  ├─ page.tsx
+│  │  │  └─ success
+│  │  │     └─ page.tsx
+│  │  └─ top
+│  │     └─ page.tsx
+│  ├─ components
+│  │  └─ JapanMap.tsx
+│  ├─ constants
+│  │  └─ japan.ts
+│  └─ lib
+│     └─ prisma.ts
+└─ tsconfig.json
+
 ```
 ---
 

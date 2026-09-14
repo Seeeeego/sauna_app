@@ -10,6 +10,7 @@ export async function updateVisitAction(formData: FormData) {
   const comment = (formData.get('comment') as string)?.trim();
 
   // 基本チェック
+  // 二重チェック
   if (!visitId || !userId || !comment) {
     return;
   }
