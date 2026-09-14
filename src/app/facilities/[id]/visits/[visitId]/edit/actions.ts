@@ -22,8 +22,8 @@ export async function updateVisitAction(formData: FormData) {
     });
 
     if (!visitLog || visitLog.userId !== userId) {
-      // 本人でない場合はそのまま一覧画面へ戻す
-      redirect(`/facilities/${facilityId}/visits?userId=${userId}`);
+      // 本人でない場合はそのままログイン画面へ戻す
+      redirect(`/`);
     }
 
     // 更新実行
@@ -33,7 +33,7 @@ export async function updateVisitAction(formData: FormData) {
     });
 
     // 更新後、訪問ログ一覧へリダイレクト
-    redirect(`/facilities/${facilityId}/visits?userId=${userId}`);
+    redirect(`/facilities/${facilityId}?userId=${userId}`);
   } catch (error) {
     if ((error as { digest?: string })?.digest?.startsWith('NEXT_REDIRECT')) {
       throw error;
