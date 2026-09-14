@@ -1,4 +1,4 @@
-export interface Prefecture {
+export type Prefecture = {
   code: number;
   name: string;
   region: string;

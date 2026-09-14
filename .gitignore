@@ -48,4 +48,4 @@ next-env.d.ts
 src/generated/
 
 # メモファイル
-docs/memo.txt
+docs/memo.md
