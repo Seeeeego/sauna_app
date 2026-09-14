@@ -2,7 +2,20 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 
-export default async function NewFacilityPage() {
+// クエリパラメータを受け取るための型定義
+type SearchParams = Promise<{
+  prefectureId?: string;
+  userId?: string; 
+}>;
+
+export default async function NewFacilityPage(props: {
+  searchParams: SearchParams;
+}) {
+
+   // クエリパラメータから prefectureId と userId を取得
+  const searchParams = await props.searchParams;
+  const prefectureIdParam = searchParams.prefectureId;
+  const userId = searchParams.userId; 
 
   // 都道府県一覧を DB から取得
   const prefectures = await prisma.prefecture.findMany({
@@ -31,7 +44,7 @@ export default async function NewFacilityPage() {
     }
 
     // 新規施設を作成
-    await prisma.facility.create({
+    const newFacility = await prisma.facility.create({
       data: {
         name,
         prefectureId,
@@ -41,14 +54,29 @@ export default async function NewFacilityPage() {
       },
     });
 
-    // 遷移図: C --> |登録完了| E (登録完了画面へ)
-    redirect(`/facilities/success`);
-  }
+    // 次の完了画面へ引き継ぐクエリパラメータを構築
+    const query = new URLSearchParams();
+    query.set('facilityId', String(newFacility.id)); // 新しい施設のID
+    if (userId) query.set('userId', userId);
+    // フォームで今選んだ都道府県、またはURLに元々あった都道府県をセット
+    query.set('prefectureId', String(prefectureId) || prefectureIdParam || '');
 
+    // 完了画面へリダイレクト
+    redirect(`/facilities/success?${query.toString()}`);
+  }
+  
+  // 「← 施設一覧に戻る」ボタン用のクエリ文字列
+  const buildQuery = () => {
+    const query = new URLSearchParams();
+    if (prefectureIdParam) query.set('prefectureId', prefectureIdParam);
+    if (userId) query.set('userId', userId);
+    const str = query.toString();
+    return str ? `?${str}` : '';
+  };
   return (
     <main>
       <p>
-        <Link href="/facilities">← 施設一覧に戻る</Link>
+        <Link href={`/facilities${buildQuery()}`}>← 施設一覧に戻る</Link>
       </p>
 
       <h1>新規施設登録</h1>
