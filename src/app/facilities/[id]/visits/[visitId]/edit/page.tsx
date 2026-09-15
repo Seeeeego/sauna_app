@@ -1,4 +1,3 @@
-// app/facilities/[id]/visits/[visitId]/edit/page.tsx
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
