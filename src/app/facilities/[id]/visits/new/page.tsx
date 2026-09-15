@@ -1,6 +1,8 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
+import fs from 'fs/promises';
+import path from 'path';
 
 type Props = {
   params: Promise<{
@@ -38,7 +40,7 @@ export default async function NewVisitPage({ params, searchParams }: Props) {
     const rating = Number(formData.get('rating'));
     const feeStr = formData.get('fee') as string;
     const comment = (formData.get('comment') as string)?.trim(); 
-    const imageUrl = (formData.get('imageUrl') as string)?.trim();
+    const imageFile = formData.get('imageFile') as File | null;
     const actionUserId = Number(formData.get('userId')); // hiddenからuserIdを取得
 
     const fee = feeStr ? Number(feeStr) : null;
@@ -58,20 +60,36 @@ export default async function NewVisitPage({ params, searchParams }: Props) {
       throw new Error('ユーザーが存在しません。');
     }
 
-    // Visit の作成（送られてきた userId を指定）
+    // 画像ファイルの保存処理（最小限）
+    let savedImagePath: string | null = null;
+
+    if (imageFile && imageFile.size > 0 && imageFile.name !== 'undefined') {
+      const bytes = await imageFile.arrayBuffer();
+      const buffer = Buffer.from(bytes);
+
+      // public/uploads フォルダに選択したファイル名そのままで保存
+      const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+      await fs.mkdir(uploadDir, { recursive: true });
+
+      const filePath = path.join(uploadDir, imageFile.name);
+      await fs.writeFile(filePath, buffer);
+
+      // 表示用のパスを設定
+      savedImagePath = `/uploads/${imageFile.name}`;
+    }
+
+    // DBへの登録
     await prisma.visit.create({
       data: {
         facilityId,
-        userId: actionUserId, 
+        userId: actionUserId,
         visitDate: new Date(visitDate),
         rating,
-        fee,
+        fee: fee,
         comment: comment || null,
-        ...(imageUrl && {
+        ...(savedImagePath && {
           images: {
-            create: {
-              imageUrl,
-            },
+            create: { imageUrl: savedImagePath },
           },
         }),
       },
@@ -185,10 +203,7 @@ export default async function NewVisitPage({ params, searchParams }: Props) {
           <label htmlFor="imageUrl" style={{ display: 'block', fontWeight: 'bold' }}>
             画像URL (任意):
           </label>
-          <input
-            type="url"
-            id="imageUrl"
-            name="imageUrl"
+          <input type="file" name="imageFile" accept="image/*" 
             placeholder="https://example.com/image.jpg"
             style={{ width: '100%', padding: '5px' }}
           />

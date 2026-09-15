@@ -18,6 +18,10 @@ export default async function FacilityDetailPage({ params, searchParams }: Props
   const { prefectureId, userId } = await searchParams ?? {}; 
   const facilityId = Number(id);
 
+  if (!userId) {
+    redirect('/');
+  }
+  
   // 数値に変換できない場合は 404 画面へ
   if (isNaN(facilityId)) {
     notFound();

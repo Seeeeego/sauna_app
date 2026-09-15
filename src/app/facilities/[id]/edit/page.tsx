@@ -7,15 +7,20 @@ interface Props {
     id: string;
   }>;
   searchParams?: Promise<{
-    prefectureId?: string;
+    prefectureId?: string,
+    userId?: string;
   }>;
 }
 
 export default async function EditFacilityPage({ params, searchParams }: Props) {
   const { id } = await params;
 //   null,undefinedを許容
-  const { prefectureId } = await searchParams ?? {};
+  const { prefectureId, userId } = await searchParams ?? {};
   const facilityId = Number(id);
+
+  if (!userId) {
+    redirect('/');
+  }
 
   if (isNaN(facilityId)) {
     notFound();
@@ -61,17 +66,17 @@ export default async function EditFacilityPage({ params, searchParams }: Props) 
     });
 
     // 編集完了後は詳細画面へリダイレクト
-    const redirectUrl = prefectureId
-      ? `/facilities/${facilityId}?prefectureId=${prefectureId}`
-      : `/facilities/${facilityId}`;
+    const redirectUrl = prefectureId && userId
+      ? `/facilities/${facilityId}?prefectureId=${prefectureId}&userId=${userId}`
+      : `/facilities/${facilityId}?userId=${userId}`;
 
     redirect(redirectUrl);
   }
 
   // キャンセル（戻る）URL
-  const backUrl = prefectureId
-    ? `/facilities/${facilityId}?prefectureId=${prefectureId}`
-    : `/facilities/${facilityId}`;
+  const backUrl = prefectureId && userId
+    ? `/facilities/${facilityId}?prefectureId=${prefectureId}&userId=${userId}`
+    : `/facilities/${facilityId}?userId=${userId}`;
 
   return (
     <main style={{ padding: '20px', fontFamily: 'sans-serif' }}>
