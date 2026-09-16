@@ -74,30 +74,37 @@ export default async function NewFacilityPage(props: {
     return str ? `?${str}` : '';
   };
   return (
-    <main>
-      <p>
-        <Link href={`/facilities${buildQuery()}`}>← 施設一覧に戻る</Link>
-      </p>
+    <main className="max-w-xl mx-auto p-6 bg-white rounded-xl shadow mt-8 font-sans">
+      <h1 className="text-2xl font-bold mb-6 text-slate-800">新規施設登録</h1>
 
-      <h1>新規施設登録</h1>
-
-      <form action={createFacility}>
+      <form action={createFacility} className="space-y-4">
+        {/* 施設名 */}
         <div>
-          <label htmlFor="name">施設名: </label>
+          <label htmlFor="name" className="block text-sm font-bold text-slate-700 mb-2">
+            施設名
+          </label>
           <input
             type="text"
             id="name"
             name="name"
             required
             placeholder="例: かるまる池袋"
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
         </div>
 
-        <br />
-
+        {/* 都道府県 */}
         <div>
-          <label htmlFor="prefectureId">都道府県: </label>
-          <select id="prefectureId" name="prefectureId" required defaultValue="">
+          <label htmlFor="prefectureId" className="block text-sm font-bold text-slate-700 mb-2">
+            都道府県
+          </label>
+          <select
+            id="prefectureId"
+            name="prefectureId"
+            required
+            defaultValue={prefectureIdParam ?? ''}
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          >
             <option value="" disabled>
               選択してください
             </option>
@@ -109,33 +116,50 @@ export default async function NewFacilityPage(props: {
           </select>
         </div>
 
-        <br />
-
+        {/* 詳細な住所（任意） */}
         <div>
-          <label htmlFor="address">詳細な住所（任意）: </label>
+          <label htmlFor="address" className="block text-sm font-bold text-slate-700 mb-2">
+            詳細な住所 (任意)
+          </label>
           <input
             type="text"
             id="address"
             name="address"
             placeholder="例: 豊島区池袋2-7-7"
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
         </div>
 
-        <br />
-
+        {/* ホームページURL（任意） */}
         <div>
-          <label htmlFor="hpUrl">ホームページURL（任意）: </label>
+          <label htmlFor="hpUrl" className="block text-sm font-bold text-slate-700 mb-2">
+            ホームページURL (任意)
+          </label>
           <input
             type="url"
             id="hpUrl"
             name="hpUrl"
             placeholder="https://example.com"
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
         </div>
 
-        <br />
+        {/* ボタン領域 */}
+        <div className="flex gap-4 pt-2">
+          <button
+            type="submit"
+            className="flex-1 bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            登録する
+          </button>
 
-        <button type="submit">登録する</button>
+          <Link
+            href={`/facilities${buildQuery()}`}
+            className="px-4 py-2 border border-slate-300 text-slate-700 font-bold rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center"
+          >
+            キャンセル
+          </Link>
+        </div>
       </form>
     </main>
   );

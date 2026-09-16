@@ -116,107 +116,110 @@ export default async function NewVisitPage({ params, searchParams }: Props) {
   const today = new Date().toISOString().split('T')[0];
 
   return (
-    <main style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      {/* 戻るボタン */}
+  <main className="max-w-xl mx-auto p-6 bg-white rounded-xl shadow mt-8 font-sans">
+    <h1 className="text-2xl font-bold mb-6 text-slate-800">
+      {facility.name} - 訪問ログを追加
+    </h1>
+
+    <form action={createVisit} className="space-y-4">
+      {/* Server Action に userId を渡すための hidden input */}
+      <input type="hidden" name="userId" value={userId} />
+
+      {/* 1. 訪問日 */}
       <div>
-        <Link href={`/facilities/${id}${buildQuery()}`}>
-          <button style={{ padding: '5px 10px', cursor: 'pointer', marginBottom: '20px' }}>
-            ← 施設詳細に戻る
-          </button>
-        </Link>
+        <label htmlFor="visitDate" className="block text-sm font-bold text-slate-700 mb-2">
+          訪問日
+        </label>
+        <input
+          type="date"
+          id="visitDate"
+          name="visitDate"
+          defaultValue={today}
+          required
+          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        />
       </div>
 
-      <h1>{facility.name} - 訪問ログを追加</h1>
+      {/* 2. 評価 (1〜5) */}
+      <div>
+        <label htmlFor="rating" className="block text-sm font-bold text-slate-700 mb-2">
+          評価 (1〜5)
+        </label>
+        <select
+          id="rating"
+          name="rating"
+          defaultValue="5"
+          required
+          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        >
+          <option value="5">★★★★★ (5)</option>
+          <option value="4">★★★★☆ (4)</option>
+          <option value="3">★★★☆☆ (3)</option>
+          <option value="2">★★☆☆☆ (2)</option>
+          <option value="1">★☆☆☆☆ (1)</option>
+        </select>
+      </div>
 
-      {/* フォーム領域 */}
-      <form action={createVisit} style={{ display: 'flex', flexDirection: 'column', gap: '15px', maxWidth: '400px' }}>
-        
-        {/* Server Action に userId を渡すための hidden input */}
-        <input type="hidden" name="userId" value={userId} />
+      {/* 3. 利用料金 (任意) */}
+      <div>
+        <label htmlFor="fee" className="block text-sm font-bold text-slate-700 mb-2">
+          利用料金 (円) (任意)
+        </label>
+        <input
+          type="number"
+          id="fee"
+          name="fee"
+          placeholder="例: 1500"
+          min="0"
+          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        />
+      </div>
 
-        {/* 訪問日 */}
-        <div>
-          <label htmlFor="visitDate" style={{ display: 'block', fontWeight: 'bold' }}>
-            訪問日:
-          </label>
-          <input
-            type="date"
-            id="visitDate"
-            name="visitDate"
-            defaultValue={today}
-            required
-            style={{ width: '100%', padding: '5px' }}
-          />
-        </div>
+      {/* 4. コメント (任意) */}
+      <div>
+        <label htmlFor="comment" className="block text-sm font-bold text-slate-700 mb-2">
+          コメント (任意)
+        </label>
+        <textarea
+          id="comment"
+          name="comment"
+          rows={4}
+          placeholder="感想や混雑具合などを入力"
+          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+        />
+      </div>
 
-        {/* 評価 (1〜5) */}
-        <div>
-          <label htmlFor="rating" style={{ display: 'block', fontWeight: 'bold' }}>
-            評価 (1〜5):
-          </label>
-          <select
-            id="rating"
-            name="rating"
-            defaultValue="5"
-            required
-            style={{ width: '100%', padding: '5px' }}
-          >
-            <option value="5">★★★★★ (5)</option>
-            <option value="4">★★★★☆ (4)</option>
-            <option value="3">★★★☆☆ (3)</option>
-            <option value="2">★★☆☆☆ (2)</option>
-            <option value="1">★☆☆☆☆ (1)</option>
-          </select>
-        </div>
+      {/* 5. 画像ファイル (任意) */}
+      <div>
+        <label htmlFor="imageFile" className="block text-sm font-bold text-slate-700 mb-2">
+          画像ファイル (任意)
+        </label>
+        <input
+          type="file"
+          id="imageFile"
+          name="imageFile"
+          accept="image/*"
+          className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+        />
+      </div>
 
-        {/* 利用料金 (任意) */}
-        <div>
-          <label htmlFor="fee" style={{ display: 'block', fontWeight: 'bold' }}>
-            利用料金 (円) (任意):
-          </label>
-          <input
-            type="number"
-            id="fee"
-            name="fee"
-            placeholder="例: 1500"
-            min="0"
-            style={{ width: '100%', padding: '5px' }}
-          />
-        </div>
+      {/* ボタン領域 */}
+      <div className="flex gap-4 pt-2">
+        <button
+          type="submit"
+          className="flex-1 bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          保存する
+        </button>
 
-        {/* コメント */}
-        <div>
-          <label htmlFor="comment" style={{ display: 'block', fontWeight: 'bold' }}>
-            コメント (任意):
-          </label>
-          <textarea
-            id="comment"
-            name="comment"
-            rows={4}
-            placeholder="感想や混雑具合などを入力"
-            style={{ width: '100%', padding: '5px' }}
-          />
-        </div>
-
-        {/* 画像URL (任意) */}
-        <div>
-          <label htmlFor="imageUrl" style={{ display: 'block', fontWeight: 'bold' }}>
-            画像URL (任意):
-          </label>
-          <input type="file" name="imageFile" accept="image/*" 
-            placeholder="https://example.com/image.jpg"
-            style={{ width: '100%', padding: '5px' }}
-          />
-        </div>
-
-        {/* 送信ボタン */}
-        <div>
-          <button type="submit" style={{ padding: '10px 15px', cursor: 'pointer' }}>
-            保存する
-          </button>
-        </div>
-
-      </form>
-    </main>
-  );
+        <Link
+          href={`/facilities/${id}${buildQuery()}`}
+          className="px-4 py-2 border border-slate-300 text-slate-700 font-bold rounded-lg hover:bg-slate-50 transition-colors flex items-center justify-center"
+        >
+          キャンセル
+        </Link>
+      </div>
+    </form>
+  </main>
+);
 }
