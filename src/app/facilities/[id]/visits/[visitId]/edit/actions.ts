@@ -7,16 +7,24 @@ export async function updateVisitAction(formData: FormData) {
   const visitId = Number(formData.get('visitId'));
   const userId = Number(formData.get('userId'));
   const facilityId = formData.get('facilityId') as string;
-  const comment = (formData.get('comment') as string)?.trim();
   const prefectureId = formData.get('prefectureId') as string;
 
+  // 1. 各フィールドを FormData から取得
+  const visitDateStr = formData.get('visitDate') as string;
+  const ratingStr = formData.get('rating') as string;
+  const feeStr = formData.get('fee') as string;
+  const comment = (formData.get('comment') as string)?.trim();
+
+  // 2. 数値・日付等の型変換
+  const visitDate = visitDateStr ? new Date(visitDateStr) : new Date();
+  const rating = Number(ratingStr);
+  const fee = feeStr ? Number(feeStr) : null;
+
   // 基本チェック
-  // 二重チェック
-  if (!visitId || !userId || !comment) {
+  if (!visitId || !userId || isNaN(rating)) {
     return;
   }
 
-  // リダイレクト時にURLが壊れないよう URLSearchParams でクエリ文字列を組み立てる
   const buildRedirectQuery = () => {
     const query = new URLSearchParams();
     query.set('userId', String(userId));
@@ -25,23 +33,27 @@ export async function updateVisitAction(formData: FormData) {
   };
 
   try {
-    // 本人確認：DB上の訪問ログ所有者と送信された userId を照合
+    // 本人確認
     const visitLog = await prisma.visit.findUnique({
       where: { id: visitId },
     });
 
     if (!visitLog || visitLog.userId !== userId) {
-      // 本人でない場合はそのままログイン画面へ戻す
       redirect(`/`);
     }
 
-    // 更新実行
+    // 3. すべての項目を DB に反映（update に渡す data を拡張）
     await prisma.visit.update({
       where: { id: visitId },
-      data: { comment },
+      data: {
+        visitDate,
+        rating,
+        fee,
+        comment: comment || null,
+      },
     });
 
-    // 更新後、訪問ログ一覧へリダイレクト
+    // リダイレクト
     redirect(`/facilities/${facilityId}?${buildRedirectQuery()}`);
   } catch (error) {
     if ((error as { digest?: string })?.digest?.startsWith('NEXT_REDIRECT')) {

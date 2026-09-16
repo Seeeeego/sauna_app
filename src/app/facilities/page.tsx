@@ -58,12 +58,15 @@ export default async function FacilitiesPage(props: {
     <main style={{ padding: '20px', fontFamily: 'sans-serif' }}>
       {/* 画面ヘッダーと新規追加ボタン */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1>施設一覧</h1>
-        {/* ④ 新規追加ボタンに userId を引き継ぐ */}
-        <Link href={`/facilities/new${buildQuery()}`}>
-          <button style={{ padding: '10px 15px', cursor: 'pointer' }}>
-            ＋ 新規施設を追加
-          </button>
+        <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">
+          施設一覧
+        </h1>
+
+        <Link
+          href={`/facilities/new${buildQuery()}`}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg shadow-sm transition-colors text-sm flex items-center gap-1"
+        >
+          <span>＋</span> 新規施設を追加
         </Link>
       </div>
 
@@ -87,7 +90,11 @@ export default async function FacilitiesPage(props: {
               </option>
             ))}
           </select>
-          <button type="submit" style={{ padding: '5px 10px', cursor: 'pointer' }}>
+          <button
+          type="submit"
+          className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-1.5 px-4 
+          rounded-lg shadow-sm transition-colors text-sm cursor-pointer"
+          >
             絞り込む
           </button>
         </form>
