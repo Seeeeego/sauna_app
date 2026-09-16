@@ -17,6 +17,10 @@ export default async function NewFacilityPage(props: {
   const prefectureIdParam = searchParams.prefectureId;
   const userId = searchParams.userId; 
 
+  if (!userId) {
+    redirect('/');
+  }
+
   // 都道府県一覧を DB から取得
   const prefectures = await prisma.prefecture.findMany({
     orderBy: { id: 'asc' },
@@ -36,11 +40,12 @@ export default async function NewFacilityPage(props: {
       return;
     }
 
-    // DBからデフォルトのユーザーを取得（作成者の紐付け用）
-    const defaultUser = await prisma.user.findFirst();
+    /// ★ フォームから送られた userId を取得
+    const currentUserIdStr = formData.get('userId') as string;
+    const currentUserId = Number(currentUserIdStr);
 
-    if (!defaultUser) {
-      throw new Error('ユーザーが存在しません。先に seed を実行してください。');
+    if (!name || isNaN(prefectureId) || isNaN(currentUserId)) {
+      return;
     }
 
     // 新規施設を作成
@@ -50,7 +55,7 @@ export default async function NewFacilityPage(props: {
         prefectureId,
         address: address || null,
         hpUrl: hpUrl || null,
-        userId: defaultUser.id,
+        userId: currentUserId,
       },
     });
 
@@ -78,6 +83,7 @@ export default async function NewFacilityPage(props: {
       <h1 className="text-2xl font-bold mb-6 text-slate-800">新規施設登録</h1>
 
       <form action={createFacility} className="space-y-4">
+        <input type="hidden" name="userId" value={userId ?? ''} />
         {/* 施設名 */}
         <div>
           <label htmlFor="name" className="block text-sm font-bold text-slate-700 mb-2">
