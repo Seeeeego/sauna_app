@@ -84,7 +84,7 @@ export default function RegisterPage() {
 
       <div style={{ textAlign: 'center' }}>
         <p style={{ fontSize: '14px', color: '#666' }}>既にアカウントをお持ちの方</p>
-        <Link href="/">
+        <Link href="/login">
           <button
             type="button"
             disabled={isPending}

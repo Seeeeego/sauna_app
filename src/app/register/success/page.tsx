@@ -11,7 +11,7 @@ export default function RegisterSuccessPage() {
       </p>
 
       <div style={{ marginTop: '30px' }}>
-        <Link href="/">
+        <Link href="/login">
           <button
             type="button"
             style={{
