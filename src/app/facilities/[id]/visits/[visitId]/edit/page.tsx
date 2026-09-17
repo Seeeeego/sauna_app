@@ -83,6 +83,7 @@ export default async function EditVisitPage({ params, searchParams }: Props) {
             name="visitDate"
             defaultValue={today}
             required
+            // foucs:入力中,選択中のスタイル
             className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
         </div>

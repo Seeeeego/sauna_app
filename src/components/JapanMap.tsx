@@ -45,7 +45,8 @@ export default function JapanMap({ prefectures, userId }: JapanMapProps) {
         ♨️ エリア・都道府県からサウナ・温泉を探す
       </h2>
 
-      {/* エリア選択ボタン (モバイル・タブレット用バッジ) */}
+      {/* エリア選択ボタン (モバイル・タブレット用バッジ) 
+          flex-wrap : モバイル版の場合折り返す*/}
       <div className="flex flex-wrap justify-center gap-2 mb-8">
         <button
           onClick={() => setSelectedRegion(null)}

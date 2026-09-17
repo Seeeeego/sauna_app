@@ -31,6 +31,7 @@ export default async function FacilitiesPage(props: {
 
   // 3. DBから施設一覧を取得（prefecture リレーションと訪問回数のカウントを含める）
   const facilities = await prisma.facility.findMany({
+    // isNaN: 指定した値がNot a Numberか判定する関数
     where: !isNaN(prefectureId) ? { prefectureId } : undefined,
     include: {
       prefecture: true,
@@ -41,8 +42,10 @@ export default async function FacilitiesPage(props: {
     orderBy: { createdAt: 'desc' },
   });
 
+  // Record<K,T>:連想配列,keyとvalueの方をまとめて型定義する
   const buildQuery = (extraParams: Record<string, string | undefined> = {}) => {
     const query = new URLSearchParams();
+    // set():key,valueの値を更新
     if (!isNaN(prefectureId)) query.set('prefectureId', String(prefectureId));
     if (userId) query.set('userId', userId);
 
