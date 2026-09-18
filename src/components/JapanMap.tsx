@@ -10,27 +10,22 @@ type Prefecture = {
   name: string;
 };
 
-// 1. Props に userId を追加
 type JapanMapProps = {
   prefectures: Prefecture[];
-  userId?: string;
 };
 
-export default function JapanMap({ prefectures, userId }: JapanMapProps) {
+export default function JapanMap({ prefectures }: JapanMapProps) {
   const router = useRouter();
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null);
 
-  // 都道府県名から ID を取得して prefectureId と userId クエリで遷移するハンドラー
+  // 都道府県名から ID を取得して prefectureId クエリで遷移するハンドラー
   const handlePrefClick = (prefName: string) => {
     const targetPref = prefectures.find((p) => p.name === prefName);
 
-    // 2. URLクエリパラメーターの組み立て
+    // prefectureId のみをクエリパラメーターに設定
     const params = new URLSearchParams();
     if (targetPref) {
       params.set('prefectureId', String(targetPref.id));
-    }
-    if (userId) {
-      params.set('userId', userId);
     }
 
     const queryString = params.toString();
@@ -45,8 +40,7 @@ export default function JapanMap({ prefectures, userId }: JapanMapProps) {
         ♨️ エリア・都道府県からサウナ・温泉を探す
       </h2>
 
-      {/* エリア選択ボタン (モバイル・タブレット用バッジ) 
-          flex-wrap : モバイル版の場合折り返す*/}
+      {/* エリア選択ボタン (モバイル・タブレット用バッジ) */}
       <div className="flex flex-wrap justify-center gap-2 mb-8">
         <button
           onClick={() => setSelectedRegion(null)}

@@ -1,21 +1,29 @@
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import JapanMap from '@/components/JapanMap';
 import { prisma } from '@/lib/prisma';
 
-type Props = {
-  searchParams?: Promise<{
-    userId?: string;
-  }>;
-};
+export default async function HomePage() {
+  // 1. Cookie から session_id を取得
+  const cookieStore = await cookies();
+  const sessionId = cookieStore.get('session_id')?.value;
 
-export default async function HomePage({ searchParams }: Props) {
-  const { userId } = await searchParams ?? {};
-
-  if (!userId) {
-    redirect('/');
+  if (!sessionId) {
+    redirect('/login');
   }
 
-  // DBから都道府県データ（id, name）を全件取得
+  // 2. DB の session テーブルを参照して有効なユーザーとセッションかを判定
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+    include: { user: true },
+  });
+
+  // セッションが存在しない、または有効期限切れの場合はログイン画面へリダイレクト
+  if (!session || session.expiresAt < new Date()) {
+    redirect('/login');
+  }
+
+  // 3. DB から都道府県データを全件取得
   const prefectures = await prisma.prefecture.findMany({
     select: {
       id: true,
@@ -36,8 +44,8 @@ export default async function HomePage({ searchParams }: Props) {
           </p>
         </header>
 
-        {/* 3. JapanMap に userId を渡す */}
-        <JapanMap prefectures={prefectures} userId={userId} />
+        {/* JapanMap に userId を渡す必要はなくなりました */}
+        <JapanMap prefectures={prefectures} />
       </div>
     </main>
   );
