@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import bcrypt from 'bcryptjs';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '@/generated/prisma/client';
 
@@ -6,7 +7,10 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  // 既存データを削除
+  console.log('🌱 Deleting existing data...');
+
+  // 1. 既存データを削除 (外部キーの依存関係順に削除)
+  await prisma.session.deleteMany();     // セッションを削除対象に追加
   await prisma.visitImage.deleteMany();
   await prisma.visit.deleteMany();
   await prisma.facilityTag.deleteMany();
@@ -15,17 +19,22 @@ async function main() {
   await prisma.prefecture.deleteMany();
   await prisma.user.deleteMany();
 
-  // ユーザーを作成
+  console.log('👤 Creating users...');
+
+  // シード用共通パスワードのハッシュ値を生成 (例: "password123")
+  const defaultPasswordHash = await bcrypt.hash('password123', 10);
+
+  // 2. ユーザーを作成（password フィールドを追加）
   await prisma.user.createMany({
     data: [
-      { email: 'taro@example.com', name: 'サウナ太郎' },
-      { email: 'hanako@example.com', name: '温泉花子' },
-      { email: 'totonoi_ken@example.com', name: '宮島数郎' },
-      { email: 'furo_suki@example.com', name: '東栄介' },
-      { email: 'yudono_misa@example.com', name: '小杉ブラまよ' },
-      { email: 'spa_master@example.com', name: '残馬二浪' },
-      { email: 'roten_daisuki@example.com', name: '吉岡ひでひと' },
-      { email: 'mizuburo_love@example.com', name: '高脚ざむらい' },
+      { email: 'taro@example.com', name: 'サウナ太郎', password: defaultPasswordHash },
+      { email: 'hanako@example.com', name: '温泉花子', password: defaultPasswordHash },
+      { email: 'totonoi_ken@example.com', name: '宮島数郎', password: defaultPasswordHash },
+      { email: 'furo_suki@example.com', name: '東栄介', password: defaultPasswordHash },
+      { email: 'yudono_misa@example.com', name: '小杉ブラまよ', password: defaultPasswordHash },
+      { email: 'spa_master@example.com', name: '残馬二浪', password: defaultPasswordHash },
+      { email: 'roten_daisuki@example.com', name: '吉岡ひでひと', password: defaultPasswordHash },
+      { email: 'mizuburo_love@example.com', name: '高脚ざむらい', password: defaultPasswordHash },
     ]
   });
 
@@ -34,7 +43,9 @@ async function main() {
   const user3Id = users[2].id;
   const user8Id = users[7].id;
 
-  // 都道府県を作成
+  console.log('🗾 Creating prefectures...');
+
+  // 3. 都道府県を作成
   await prisma.prefecture.createMany({
     data: [
       { name: '北海道' }, { name: '青森県' }, { name: '岩手県' }, { name: '宮城県' },
@@ -55,13 +66,17 @@ async function main() {
   const prefectures = await prisma.prefecture.findMany({ orderBy: { id: 'asc' } });
   const getPrefId = (index: number) => prefectures[index - 1].id;
 
-  // タグを作成
+  console.log('🏷️ Creating tags...');
+
+  // 4. タグを作成
   const tagSauna = await prisma.tag.create({ data: { name: 'サウナあり' } });
   const tagMizuburo = await prisma.tag.create({ data: { name: '水風呂あり' } });
   const tagRoten = await prisma.tag.create({ data: { name: '露天風呂あり' } });
   const tagGensen = await prisma.tag.create({ data: { name: '源泉かけ流し' } });
 
-  // 個別施設を作成
+  console.log('♨️ Creating facilities...');
+
+  // 5. 個別施設を作成
   const facility1 = await prisma.facility.create({
     data: {
       userId: user3Id,
@@ -154,7 +169,7 @@ async function main() {
     ]
   });
 
-  // 施設とタグの紐付け
+  // 6. 施設とタグの紐付け
   await prisma.facilityTag.createMany({
     data: [
       { facilityId: facility1.id, tagId: tagSauna.id },
@@ -166,7 +181,9 @@ async function main() {
     ],
   });
 
-  // 訪問記録を作成 (変数で取得したIDを使用)
+  console.log('📝 Creating visits...');
+
+  // 7. 訪問記録を作成
   const visit1 = await prisma.visit.create({
     data: {
       userId: user3Id,
@@ -189,7 +206,7 @@ async function main() {
     },
   });
 
-  // 訪問画像を作成
+  // 8. 訪問画像を作成
   await prisma.visitImage.createMany({
     data: [
       {
@@ -207,7 +224,8 @@ async function main() {
     ],
   });
 
-  console.log('Seed data created successfully');
+  console.log('✅ Seed data created successfully!');
+  console.log('🔑 All users password set to: "password123"');
 }
 
 main()
