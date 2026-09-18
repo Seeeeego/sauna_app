@@ -62,6 +62,22 @@ export default function LoginPage() {
           />
         </div>
 
+        {/* パスワード入力欄を追加 */}
+        <div>
+          <label htmlFor="password" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+            パスワード:
+          </label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            required
+            disabled={isPending}
+            placeholder="••••••••"
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+          />
+        </div>
+
         <button
           type="submit"
           disabled={isPending}

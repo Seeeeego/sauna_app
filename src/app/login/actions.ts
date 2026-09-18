@@ -1,6 +1,8 @@
 'use server';
 
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
+import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/prisma';
 
 export type LoginState = {
@@ -13,12 +15,14 @@ export async function loginAction(
 ): Promise<LoginState> {
   const name = (formData.get('name') as string)?.trim();
   const email = (formData.get('email') as string)?.trim();
+  const password = (formData.get('password') as string)?.trim();
 
-  if (!name || !email) {
-    return { error: 'ユーザー名とメールアドレスの両方を入力してください。' };
+  // 1. バリデーションチェック
+  if (!name || !email || !password) {
+    return { error: '名前、メールアドレス、パスワードをすべて入力してください。' };
   }
 
-  // DBから一致するユーザーを検索
+  // 2. DBから名前とメールアドレスの両方が一致するユーザーを取得
   const user = await prisma.user.findFirst({
     where: {
       name,
@@ -27,9 +31,35 @@ export async function loginAction(
   });
 
   if (!user) {
-    return { error: 'ユーザー名またはメールアドレスが一致しません。' };
+    return { error: '入力されたユーザー情報が見つかりません。' };
   }
 
-  // ログイン成功：URLクエリパラメータに userId を付与してトップページへリダイレクト
-  redirect(`/top?userId=${user.id}`);
+  // 3. パスワードのハッシュ照合
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+
+  if (!isPasswordValid) {
+    return { error: 'パスワードが正しくありません。' };
+  }
+
+  // 4. DBにセッションを作成 (有効期限: 7日間)
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const session = await prisma.session.create({
+    data: {
+      userId: user.id,
+      expiresAt,
+    },
+  });
+
+  // 5. Cookie にセッションIDを保存
+  const cookieStore = await cookies();
+  cookieStore.set('session_id', session.id, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    expires: expiresAt,
+    path: '/',
+  });
+
+  // 6. ログイン成功後のリダイレクト
+  redirect('/top');
 }
