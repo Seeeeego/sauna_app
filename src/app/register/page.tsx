@@ -15,7 +15,7 @@ export default function RegisterPage() {
     <main style={{ padding: '40px 20px', maxWidth: '400px', margin: '0 auto', fontFamily: 'sans-serif' }}>
       <h1>♨️ 新規ユーザー登録</h1>
 
-      {state.error && (
+      {state?.error && (
         <div
           style={{
             padding: '10px 15px',
@@ -58,6 +58,23 @@ export default function RegisterPage() {
             required
             disabled={isPending}
             placeholder="example@example.com"
+            style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
+          />
+        </div>
+
+        {/* パスワード入力欄 */}
+        <div>
+          <label htmlFor="password" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+            パスワード (8文字以上):
+          </label>
+          <input
+            type="password"
+            id="password"
+            name="password"
+            minLength={8}
+            required
+            disabled={isPending}
+            placeholder="••••••••"
             style={{ width: '100%', padding: '8px', boxSizing: 'border-box' }}
           />
         </div>
