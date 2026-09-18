@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
@@ -5,33 +6,42 @@ import { prisma } from '@/lib/prisma';
 // クエリパラメータを受け取るための型定義
 type SearchParams = Promise<{
   prefectureId?: string;
-  userId?: string; 
 }>;
 
 export default async function FacilitiesPage(props: {
   searchParams: SearchParams;
 }) {
-  // 1. クエリパラメータから prefectureId と userId を取得
+  // 1. Cookie から session_id を取得してユーザー認証を行う
+  const cookieStore = await cookies();
+  const sessionId = cookieStore.get('session_id')?.value;
+
+  if (!sessionId) {
+    redirect('/login');
+  }
+
+  // DBの session テーブルを参照して有効なセッションか確認
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+  });
+
+  if (!session || session.expiresAt < new Date()) {
+    redirect('/login');
+  }
+
+  // 2. クエリパラメータから prefectureId を取得
   const searchParams = await props.searchParams;
   const prefectureIdParam = searchParams.prefectureId;
-  const userId = searchParams.userId; 
-
-  // 未ログイン（userIdがない）場合はログイン画面へリダイレクト
-  if (!userId) {
-    redirect('/');
-  }
 
   // urlから受け取る値は数値型に変換する
   const prefectureId = prefectureIdParam ? Number(prefectureIdParam) : NaN;
 
-  // 2. 都道府県一覧を取得（ドロップダウン用）
+  // 3. 都道府県一覧を取得（ドロップダウン用）
   const prefectures = await prisma.prefecture.findMany({
     orderBy: { id: 'asc' },
   });
 
-  // 3. DBから施設一覧を取得（prefecture リレーションと訪問回数のカウントを含める）
+  // 4. DBから施設一覧を取得（prefecture リレーションと訪問回数のカウントを含める）
   const facilities = await prisma.facility.findMany({
-    // isNaN: 指定した値がNot a Numberか判定する関数
     where: !isNaN(prefectureId) ? { prefectureId } : undefined,
     include: {
       prefecture: true,
@@ -42,19 +52,12 @@ export default async function FacilitiesPage(props: {
     orderBy: { createdAt: 'desc' },
   });
 
-  // Record<K,T>:連想配列,keyとvalueの方をまとめて型定義する
-  const buildQuery = (extraParams: Record<string, string | undefined> = {}) => {
-    const query = new URLSearchParams();
-    // set():key,valueの値を更新
-    if (!isNaN(prefectureId)) query.set('prefectureId', String(prefectureId));
-    if (userId) query.set('userId', userId);
-
-    Object.entries(extraParams).forEach(([key, val]) => {
-      if (val) query.set(key, val);
-    });
-
-    const str = query.toString();
-    return str ? `?${str}` : '';
+  // prefectureId のみを保持したクエリ文字列を作成するヘルパー
+  const buildQuery = () => {
+    if (!isNaN(prefectureId)) {
+      return `?prefectureId=${prefectureId}`;
+    }
+    return '';
   };
 
   return (
@@ -76,9 +79,6 @@ export default async function FacilitiesPage(props: {
       {/* 都道府県絞り込みフォーム */}
       <div style={{ marginBottom: '20px' }}>
         <form action="/facilities" method="GET">
-          {/* フォーム送信時にも userId をクエリとして送る */}
-          <input type="hidden" name="userId" value={userId} />
-
           <label htmlFor="prefectureId" style={{ marginRight: '8px' }}>都道府県で絞り込み:</label>
           <select
             id="prefectureId"
@@ -94,9 +94,9 @@ export default async function FacilitiesPage(props: {
             ))}
           </select>
           <button
-          type="submit"
-          className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-1.5 px-4 
-          rounded-lg shadow-sm transition-colors text-sm cursor-pointer"
+            type="submit"
+            className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-1.5 px-4 
+            rounded-lg shadow-sm transition-colors text-sm cursor-pointer"
           >
             絞り込む
           </button>
@@ -124,7 +124,6 @@ export default async function FacilitiesPage(props: {
 
               {/* 詳細画面への遷移ボタン */}
               <div style={{ marginTop: '10px' }}>
-                {/* 詳細画面リンクに prefectureId と userId の両方を付与 */}
                 <Link href={`/facilities/${facility.id}${buildQuery()}`}>
                   <button style={{ padding: '5px 10px', cursor: 'pointer' }}>
                     詳細を見る →
