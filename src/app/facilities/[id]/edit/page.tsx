@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
+import { cookies } from 'next/headers';
 
 interface Props {
   params: Promise<{
@@ -8,18 +9,27 @@ interface Props {
   }>;
   searchParams?: Promise<{
     prefectureId?: string,
-    userId?: string;
   }>;
 }
 
 export default async function EditFacilityPage({ params, searchParams }: Props) {
   const { id } = await params;
 //   null,undefinedを許容
-  const { prefectureId, userId } = await searchParams ?? {};
+  const { prefectureId } = await searchParams ?? {};
   const facilityId = Number(id);
+  const cookieStore = await cookies();
+  const sessionId = cookieStore.get('session_id')?.value;
 
-  if (!userId) {
-    redirect('/');
+  if (!sessionId) {
+    redirect('/login');
+  }
+
+  const session = await prisma.session.findUnique({
+    where: {id: sessionId}
+  });
+
+  if (!session || session.expiresAt < new Date()){
+    redirect('/login')
   }
 
   if (isNaN(facilityId)) {
@@ -44,11 +54,22 @@ export default async function EditFacilityPage({ params, searchParams }: Props) 
   async function updateFacility(formData: FormData) {
     'use server';
 
-    const name = formData.get('name') as string;
+    const actionCookieStore = await cookies();
+    const actionSessionId = actionCookieStore.get('session_id')?.value;
+
+    if (!actionSessionId){
+      redirect('/login')
+    }
+
+    const actionSession = await prisma.session.findUnique({
+      where: { id: actionSessionId },
+    })
+
+    const name = (formData.get('name') as string)?.trim();
     const prefectureIdStr = formData.get('prefectureId') as string;
     const updatePrefectureId = Number(prefectureIdStr);
-    const address = formData.get('address') as string;
-    const hpUrl = formData.get('hpUrl') as string;
+    const address = (formData.get('address') as string)?.trim();
+    const hpUrl = (formData.get('hpUrl') as string)?.trim();
 
     if (!name || isNaN(updatePrefectureId)) {
       return;
@@ -66,17 +87,17 @@ export default async function EditFacilityPage({ params, searchParams }: Props) 
     });
 
     // 編集完了後は詳細画面へリダイレクト
-    const redirectUrl = prefectureId && userId
-      ? `/facilities/${facilityId}?prefectureId=${prefectureId}&userId=${userId}`
-      : `/facilities/${facilityId}?userId=${userId}`;
+    const redirectUrl = prefectureId
+      ? `/facilities/${facilityId}?prefectureId=${prefectureId}`
+      : `/facilities/${facilityId}`;
 
     redirect(redirectUrl);
   }
 
   // キャンセル（戻る）URL
-  const backUrl = prefectureId && userId
-    ? `/facilities/${facilityId}?prefectureId=${prefectureId}&userId=${userId}`
-    : `/facilities/${facilityId}?userId=${userId}`;
+  const backUrl = prefectureId
+    ? `/facilities/${facilityId}?prefectureId=${prefectureId}`
+    : `/facilities/${facilityId}`;
 
   return (
   <main className="max-w-xl mx-auto p-6 bg-white rounded-xl shadow mt-8 font-sans">
