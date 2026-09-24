@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import Image from 'next/image';
+import { cookies } from 'next/headers';
 
 type Props = {
   params: Promise<{
@@ -9,17 +10,26 @@ type Props = {
   }>;
   searchParams?: Promise<{
     prefectureId?: string;
-    userId?: string; // userId を受け取れるよう型を追加
   }>;
 };
 
 export default async function FacilityDetailPage({ params, searchParams }: Props) {
   const { id } = await params;
-  const { prefectureId, userId } = await searchParams ?? {}; 
+  const { prefectureId } = await searchParams ?? {}; 
   const facilityId = Number(id);
+  const cookieStore = await cookies();
+  const sessionId = cookieStore.get('session_id')?.value;
 
-  if (!userId) {
-    redirect('/');
+  if (!sessionId) {
+    redirect('/login');
+  }
+  
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId}
+  });
+
+  if (!session || session.expiresAt < new Date()){
+    redirect('/login');
   }
   
   // 数値に変換できない場合は 404 画面へ
@@ -51,6 +61,13 @@ export default async function FacilityDetailPage({ params, searchParams }: Props
   async function deleteFacility() {
     'use server';
 
+    const actionCookieStore = await cookies();
+    const actionSessionId = actionCookieStore.get('session_id')?.value;
+
+    if (!actionSessionId){
+      redirect('/login')
+    }
+
     const visitCount = await prisma.visit.count({
       where: { facilityId },
     });
@@ -64,13 +81,10 @@ export default async function FacilityDetailPage({ params, searchParams }: Props
       where: { id: facilityId },
     });
 
-    // ④ 削除後のリダイレクト先にも userId を引き継ぐ
-    const query = new URLSearchParams();
-    if (prefectureId) query.set('prefectureId', prefectureId);
-    if (userId) query.set('userId', userId);
-
-    const queryString = query.toString();
-    const redirectUrl = queryString ? `/facilities?${queryString}` : '/facilities';
+    // 削除後のリダイレクト先を構築（prefectureId のみ引き継ぎ）
+    const redirectUrl = prefectureId
+      ? `/facilities?prefectureId=${prefectureId}`
+      : '/facilities';
 
     redirect(redirectUrl);
   }
@@ -78,7 +92,6 @@ export default async function FacilityDetailPage({ params, searchParams }: Props
   const buildQuery = (extraParams: Record<string, string | undefined> = {}) => {
     const query = new URLSearchParams();
     if (prefectureId) query.set('prefectureId', prefectureId);
-    if (userId) query.set('userId', userId);
 
     Object.entries(extraParams).forEach(([key, val]) => {
       if (val) query.set(key, val);
@@ -176,8 +189,8 @@ export default async function FacilityDetailPage({ params, searchParams }: Props
       ) : (
         <ul style={{ listStyle: 'none', padding: 0 }}>
           {facility.visits.map((visit) => {
-            // 投稿者本人判定：ログイン中の userId とログ作成者の userId を比較
-            const isOwner = userId && Number(userId) === visit.userId;
+            // 投稿者本人判定：セッションの userId とログ作成者の userId を比較
+            const isOwner = session.userId === visit.userId;
 
             return (
               <li
