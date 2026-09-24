@@ -79,21 +79,16 @@ export default async function NewVisitPage({ params, searchParams }: Props) {
     }
 
     // 画像ファイルの保存処理（最小限）
-    let savedImagePath: string | null = null;
+    let imageDataUrl: string | null = null;
 
     if (imageFile && imageFile.size > 0 && imageFile.name !== 'undefined') {
-      const bytes = await imageFile.arrayBuffer();
-      const buffer = Buffer.from(bytes);
-
-      // public/uploads フォルダに選択したファイル名そのままで保存
-      const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-      await fs.mkdir(uploadDir, { recursive: true });
-
-      const filePath = path.join(uploadDir, imageFile.name);
-      await fs.writeFile(filePath, buffer);
-
-      // 表示用のパスを設定
-      savedImagePath = `/uploads/${imageFile.name}`;
+      const arrayBuffer = await imageFile.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      
+      // 例: "data:image/png;base64,iVBORw0KG..." のような文字列を作成
+      const base64String = buffer.toString('base64');
+      const mimeType = imageFile.type || 'image/jpeg';
+      imageDataUrl = `data:${mimeType};base64,${base64String}`;
     }
 
     // DBへの登録
@@ -105,9 +100,9 @@ export default async function NewVisitPage({ params, searchParams }: Props) {
         rating,
         fee: fee,
         comment: comment || null,
-        ...(savedImagePath && {
+        ...(imageDataUrl && {
           images: {
-            create: { imageUrl: savedImagePath },
+            create: { imageUrl: imageDataUrl },
           },
         }),
       },
