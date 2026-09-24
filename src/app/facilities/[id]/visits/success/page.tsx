@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { prisma } from '@/lib/prisma';
 
 interface Props {
   params: Promise<{
@@ -7,24 +9,32 @@ interface Props {
   }>;
   searchParams?: Promise<{
     prefectureId?: string;
-    userId?: string;
   }>;
 }
 
 export default async function VisitSuccessPage({ params, searchParams }: Props) {
   const { id } = await params;
-  const { prefectureId, userId } = (await searchParams) ?? {};
+  const { prefectureId } = (await searchParams) ?? {};
+  const cookieStore = await cookies();
+  const sessionId = cookieStore.get('session_id')?.value;
 
   // 未ログイン（userIdがない）場合はログイン画面へリダイレクト
-  if (!userId) {
-    redirect('/');
+  if (!sessionId) {
+    redirect('/login');
+  }
+
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId},
+  })
+
+  if (!session || session.expiresAt < new Date()){
+    redirect('/login');
   }
 
   // クエリ文字列を構築するヘルパー
   const buildQuery = (extraParams: Record<string, string | undefined> = {}) => {
     const query = new URLSearchParams();
     if (prefectureId) query.set('prefectureId', prefectureId);
-    if (userId) query.set('userId', userId);
 
     Object.entries(extraParams).forEach(([key, val]) => {
       if (val) query.set(key, val);
