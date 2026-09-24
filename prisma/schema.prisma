@@ -96,6 +96,6 @@ model VisitImage {
   id        Int      @id @default(autoincrement())
   visitId   Int
   visit     Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
-  imageUrl  String   @db.VarChar(2048)
+  imageUrl  String   @db.Text
   createdAt DateTime @default(now())
 }
