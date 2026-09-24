@@ -2,10 +2,26 @@
 
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
+import { cookies } from 'next/headers';
 
 export async function updateVisitAction(formData: FormData) {
+
+  const cookieStore = await cookies();
+  const sessionId = cookieStore.get('session_id')?.value;
+
+  if(!sessionId){
+    redirect('/login');
+  }
+
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId},
+  })
+
+  if (!session || session.expiresAt < new Date()){
+    redirect('/login');
+  }
+
   const visitId = Number(formData.get('visitId'));
-  const userId = Number(formData.get('userId'));
   const facilityId = formData.get('facilityId') as string;
   const prefectureId = formData.get('prefectureId') as string;
 
@@ -21,16 +37,9 @@ export async function updateVisitAction(formData: FormData) {
   const fee = feeStr ? Number(feeStr) : null;
 
   // 基本チェック
-  if (!visitId || !userId || isNaN(rating)) {
+  if (!visitId || isNaN(rating)) {
     return;
   }
-
-  const buildRedirectQuery = () => {
-    const query = new URLSearchParams();
-    query.set('userId', String(userId));
-    if (prefectureId) query.set('prefectureId', prefectureId);
-    return query.toString();
-  };
 
   try {
     // 本人確認
@@ -38,8 +47,8 @@ export async function updateVisitAction(formData: FormData) {
       where: { id: visitId },
     });
 
-    if (!visitLog || visitLog.userId !== userId) {
-      redirect(`/`);
+    if (!visitLog || visitLog.userId !== session.userId) {
+      redirect(`/facilities/${facilityId}`);
     }
 
     // 3. すべての項目を DB に反映（update に渡す data を拡張）
@@ -53,8 +62,16 @@ export async function updateVisitAction(formData: FormData) {
       },
     });
 
-    // リダイレクト
-    redirect(`/facilities/${facilityId}?${buildRedirectQuery()}`);
+    // リダイレクト URL の構築（prefectureId のみ保持）
+  const query = new URLSearchParams();
+  if (prefectureId) query.set('prefectureId', prefectureId);
+
+  const queryString = query.toString();
+  const redirectUrl = queryString
+    ? `/facilities/${facilityId}?${queryString}`
+    : `/facilities/${facilityId}`;
+
+  redirect(redirectUrl);
   } catch (error) {
     if ((error as { digest?: string })?.digest?.startsWith('NEXT_REDIRECT')) {
       throw error;

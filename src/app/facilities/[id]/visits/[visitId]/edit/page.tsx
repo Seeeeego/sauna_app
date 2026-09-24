@@ -1,7 +1,8 @@
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { updateVisitAction } from './actions';
+import { cookies } from 'next/headers';
 
 interface Props {
   params: Promise<{
@@ -10,17 +11,31 @@ interface Props {
   }>;
   searchParams?: Promise<{
     prefectureId?: string; // 都道府県ID
-    userId?: string;       // ユーザーID
   }>;
 }
 
 export default async function EditVisitPage({ params, searchParams }: Props) {
   const { id: facilityId, visitId } = await params;
-  const { prefectureId, userId } = (await searchParams) ?? {};
+  const { prefectureId } = (await searchParams) ?? {};
+  const cookieStore = await cookies();
+  const sessionId = cookieStore.get('session_id')?.value;
+  const visitLogId = Number(visitId);
 
   // 未ログインの場合はログイン画面へ
-  if (!userId) {
-    redirect('/');
+  if (!sessionId) {
+    redirect('/login');
+  }
+
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId }
+  })
+
+  if( !session || session.expiresAt < new Date()){
+    redirect('/login');
+  }
+
+  if(isNaN(visitLogId)){
+    notFound();
   }
 
   // クエリ文字列を構築するヘルパー関数
@@ -31,7 +46,6 @@ export default async function EditVisitPage({ params, searchParams }: Props) {
     const query = new URLSearchParams();
     // prefectureId,userIdが存在する場合のみqueryに追加する
     if (prefectureId) query.set('prefectureId', prefectureId);
-    if (userId) query.set('userId', userId);
 
     // 引数で渡されたもの(extraParams)をforEachで展開し,
     // 値があるものだけをクエリに追加している
@@ -53,7 +67,7 @@ export default async function EditVisitPage({ params, searchParams }: Props) {
   });
 
   // ログが存在しない、または作成者でない場合は施設詳細画面へ返す
-  if (!visitLog || visitLog.userId !== Number(userId)) {
+  if (!visitLog || visitLog.userId !== session.userId) {
     redirect(backUrl);
   }
 
@@ -68,7 +82,6 @@ export default async function EditVisitPage({ params, searchParams }: Props) {
       <form action={updateVisitAction} className="space-y-4">
         {/* 送信に必要な情報を hidden で保持 */}
         <input type="hidden" name="visitId" value={visitLog.id} />
-        <input type="hidden" name="userId" value={userId} />
         <input type="hidden" name="facilityId" value={facilityId} />
         {prefectureId && <input type="hidden" name="prefectureId" value={prefectureId} />}
 
