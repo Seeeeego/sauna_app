@@ -3,6 +3,7 @@ import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
 import fs from 'fs/promises';
 import path from 'path';
+import { cookies } from 'next/headers';
 
 type Props = {
   params: Promise<{
@@ -10,17 +11,30 @@ type Props = {
   }>;
   searchParams?: Promise<{
     prefectureId?: string;
-    userId?: string; 
   }>;
 };
 
 export default async function NewVisitPage({ params, searchParams }: Props) {
   const { id } = await params;
-  const { prefectureId, userId } = (await searchParams) ?? {}; 
+  const { prefectureId } = (await searchParams) ?? {}; 
   const facilityId = Number(id);
+  const cookieStore = await cookies();
+  const sessionId = cookieStore.get('session_id')?.value;
 
-  if (!userId) {
-    redirect('/');
+  if (!sessionId) {
+    redirect('/login');
+  }
+
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId},
+  })
+
+  if (!session || session.expiresAt < new Date()){
+    redirect('/login')
+  }
+
+  if (isNaN(facilityId)){
+    notFound()
   }
 
   // 対象の施設が存在するか確認
@@ -41,23 +55,27 @@ export default async function NewVisitPage({ params, searchParams }: Props) {
     const feeStr = formData.get('fee') as string;
     const comment = (formData.get('comment') as string)?.trim(); 
     const imageFile = formData.get('imageFile') as File | null;
-    const actionUserId = Number(formData.get('userId')); // hiddenからuserIdを取得
+    const actionCookieStore = await cookies();
+    const actionSessionId = actionCookieStore.get('session_id')?.value;
+
+    if (!actionSessionId){
+      redirect('/login')
+    }
+
+    const actionSession = await prisma.session.findUnique({
+      where: { id: actionSessionId}
+    });
+
+    if(!actionSession || actionSession.expiresAt < new Date()){
+      redirect('/login')
+    }
 
     const fee = feeStr ? Number(feeStr) : null;
 
     // 二重チェック
     // -> 画面を介さずデータを送りつけてくる場合を防ぐため
-    if (!visitDate || !rating || !actionUserId) {
+    if (!visitDate || !rating ) {
       return;
-    }
-
-    // DB上のユーザーが存在するか確認（不正なuserId改ざんのチェック）
-    const user = await prisma.user.findUnique({
-      where: { id: actionUserId },
-    });
-
-    if (!user) {
-      throw new Error('ユーザーが存在しません。');
     }
 
     // 画像ファイルの保存処理（最小限）
@@ -82,7 +100,7 @@ export default async function NewVisitPage({ params, searchParams }: Props) {
     await prisma.visit.create({
       data: {
         facilityId,
-        userId: actionUserId,
+        userId: actionSession.userId,
         visitDate: new Date(visitDate),
         rating,
         fee: fee,
@@ -98,18 +116,21 @@ export default async function NewVisitPage({ params, searchParams }: Props) {
     // 完了画面へリダイレクト
     const query = new URLSearchParams();
     if (prefectureId) query.set('prefectureId', prefectureId);
-    query.set('userId', String(actionUserId));
+    
+    const queryString = query.toString();
+    const redirectUrl = queryString
+    ? `/facilities/${id}/visits/success?${queryString}`
+    : `facilities/${id}/visits/success`;
 
-    redirect(`/facilities/${id}/visits/success?${query.toString()}`);
+    redirect(redirectUrl);
   }
 
   // クエリ文字列を構築するヘルパー
   const buildQuery = () => {
-    const query = new URLSearchParams();
-    if (prefectureId) query.set('prefectureId', prefectureId);
-    if (userId) query.set('userId', userId);
-    const str = query.toString();
-    return str ? `?${str}` : '';
+    if (prefectureId) {
+      return `?prefectureId=${prefectureId}`
+    }
+    return '';
   };
 
   // 本日の日付（YYYY-MM-DD形式）を初期値用に取得
@@ -122,8 +143,6 @@ export default async function NewVisitPage({ params, searchParams }: Props) {
     </h1>
 
     <form action={createVisit} className="space-y-4">
-      {/* Server Action に userId を渡すための hidden input */}
-      <input type="hidden" name="userId" value={userId} />
 
       {/* 1. 訪問日 */}
       <div>
