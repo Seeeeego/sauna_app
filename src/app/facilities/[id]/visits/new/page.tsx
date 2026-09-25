@@ -1,8 +1,6 @@
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/prisma';
-import fs from 'fs/promises';
-import path from 'path';
 import { cookies } from 'next/headers';
 
 type Props = {
@@ -74,7 +72,7 @@ export default async function NewVisitPage({ params, searchParams }: Props) {
 
     // 二重チェック
     // -> 画面を介さずデータを送りつけてくる場合を防ぐため
-    if (!visitDate || !rating ) {
+    if ( !visitDate || !rating ) {
       return;
     }
 
@@ -115,7 +113,7 @@ export default async function NewVisitPage({ params, searchParams }: Props) {
     const queryString = query.toString();
     const redirectUrl = queryString
     ? `/facilities/${id}/visits/success?${queryString}`
-    : `facilities/${id}/visits/success`;
+    : `/facilities/${id}/visits/success`;
 
     redirect(redirectUrl);
   }
