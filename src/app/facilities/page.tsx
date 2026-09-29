@@ -62,18 +62,29 @@ export default async function FacilitiesPage(props: {
 
   return (
     <main style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      {/* 画面ヘッダーと新規追加ボタン */}
+      {/* 画面ヘッダーとアクションボタン群 */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">
           施設一覧
         </h1>
 
-        <Link
-          href={`/facilities/new${buildQuery()}`}
-          className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg shadow-sm transition-colors text-sm flex items-center gap-1"
-        >
-          <span>＋</span> 新規施設を追加
-        </Link>
+        <div className="flex items-center gap-3">
+          {/* トップ画面（マップ）へ戻るボタン */}
+          <Link
+            href={`/top${buildQuery()}`}
+            className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-lg shadow-sm transition-colors text-sm flex items-center gap-1"
+          >
+            ← トップへ戻る
+          </Link>
+
+          {/* 新規施設を追加ボタン */}
+          <Link
+            href={`/facilities/new${buildQuery()}`}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg shadow-sm transition-colors text-sm flex items-center gap-1"
+          >
+            <span>＋</span> 新規施設を追加
+          </Link>
+        </div>
       </div>
 
       {/* 都道府県絞り込みフォーム */}
