@@ -32,7 +32,7 @@ export default async function FacilitiesPage(props: {
   const searchParams = await props.searchParams;
   const prefectureIdParam = searchParams.prefectureId;
 
-  // urlから受け取る値は数値型に変換する
+  // URLから受け取る値は数値型に変換する
   const prefectureId = prefectureIdParam ? Number(prefectureIdParam) : NaN;
 
   // 3. 都道府県一覧を取得（ドロップダウン用）
@@ -61,89 +61,109 @@ export default async function FacilitiesPage(props: {
   };
 
   return (
-    <main style={{ padding: '20px', fontFamily: 'sans-serif' }}>
-      {/* 画面ヘッダーとアクションボタン群 */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">
-          施設一覧
-        </h1>
+    <main className="max-w-5xl mx-auto px-4 py-8 font-sans">
+      {/* ヘッダーエリア */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+            温泉施設一覧
+          </h1>
+          <p className="text-sm text-slate-500 mt-1">
+            登録されている温泉施設の閲覧・編集ができます
+          </p>
+        </div>
 
+        {/* ナビゲーションボタン群 */}
         <div className="flex items-center gap-3">
-          {/* トップ画面（マップ）へ戻るボタン */}
           <Link
             href={`/top${buildQuery()}`}
-            className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 px-4 rounded-lg shadow-sm transition-colors text-sm flex items-center gap-1"
+            className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm"
           >
             ← トップへ戻る
           </Link>
 
-          {/* 新規施設を追加ボタン */}
           <Link
             href={`/facilities/new${buildQuery()}`}
-            className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-lg shadow-sm transition-colors text-sm flex items-center gap-1"
+            className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-all shadow-sm shadow-blue-200"
           >
-            <span>＋</span> 新規施設を追加
+            <span className="mr-1 text-base">＋</span> 施設を追加
           </Link>
         </div>
       </div>
 
-      {/* 都道府県絞り込みフォーム */}
-      <div style={{ marginBottom: '20px' }}>
-        <form action="/facilities" method="GET">
-          <label htmlFor="prefectureId" style={{ marginRight: '8px' }}>都道府県で絞り込み:</label>
-          <select
-            id="prefectureId"
-            name="prefectureId"
-            defaultValue={!isNaN(prefectureId) ? String(prefectureId) : ''}
-            style={{ padding: '5px', marginRight: '8px' }}
-          >
-            <option value="">すべての都道府県</option>
-            {prefectures.map((pref) => (
-              <option key={pref.id} value={pref.id}>
-                {pref.name}
-              </option>
-            ))}
-          </select>
-          <button
-            type="submit"
-            className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-1.5 px-4 
-            rounded-lg shadow-sm transition-colors text-sm cursor-pointer"
-          >
-            絞り込む
-          </button>
+      {/* 検索・絞り込みカード */}
+      <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm mb-8">
+        <form action="/facilities" method="GET" className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <label htmlFor="prefectureId" className="text-sm font-bold text-slate-700 whitespace-nowrap">
+            エリアで絞り込み
+          </label>
+          <div className="flex-1 flex gap-2">
+            <select
+              id="prefectureId"
+              name="prefectureId"
+              defaultValue={!isNaN(prefectureId) ? String(prefectureId) : ''}
+              className="w-full sm:w-64 p-2.5 bg-slate-50 border border-slate-300 text-slate-800 text-sm rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all cursor-pointer"
+            >
+              <option value="">すべての都道府県</option>
+              {prefectures.map((pref) => (
+                <option key={pref.id} value={pref.id}>
+                  {pref.name}
+                </option>
+              ))}
+            </select>
+            <button
+              type="submit"
+              className="px-5 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-sm font-semibold rounded-xl transition-all shadow-sm whitespace-nowrap cursor-pointer"
+            >
+              検索
+            </button>
+          </div>
         </form>
       </div>
 
-      {/* 施設が0件の場合 */}
+      {/* 施設一覧コンテンツ */}
       {facilities.length === 0 ? (
-        <p>登録されている施設がありません。</p>
+        <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300">
+          <p className="text-slate-500 font-medium">該当する施設が見つかりませんでした。</p>
+          <p className="text-xs text-slate-400 mt-1">条件を変更するか、新しい施設を登録してください。</p>
+        </div>
       ) : (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {facilities.map((facility) => (
-            <li
+            <div
               key={facility.id}
-              style={{
-                border: '1px solid #ccc',
-                padding: '15px',
-                marginBottom: '10px',
-                borderRadius: '5px',
-              }}
+              className="bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
             >
-              <h2>{facility.name}</h2>
-              <p>都道府県: {facility.prefecture.name}</p>
-              <p>訪問回数: {facility._count.visits}回</p>
+              <div>
+                {/* バッジ・メタ情報 */}
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="px-2.5 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-md border border-blue-100">
+                    {facility.prefecture.name}
+                  </span>
+                  <span className="px-2.5 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-md">
+                    訪問 {facility._count.visits} 回
+                  </span>
+                </div>
 
-              {/* 詳細画面への遷移ボタン */}
-              <div style={{ marginTop: '10px' }}>
-                <Link href={`/facilities/${facility.id}${buildQuery()}`}>
-                  <button style={{ padding: '5px 10px', cursor: 'pointer' }}>
-                    詳細を見る →
-                  </button>
+                {/* 施設名 */}
+                <h2 className="text-xl font-bold text-slate-900 tracking-tight line-clamp-1 mb-2">
+                  {facility.name}
+                </h2>
+              </div>
+
+              {/* 詳細リンクボタン */}
+              <div className="mt-6 pt-4 border-t border-slate-100 flex justify-end">
+                <Link
+                  href={`/facilities/${facility.id}${buildQuery()}`}
+                  className="inline-flex items-center text-sm font-bold text-blue-600 hover:text-blue-700 group transition-colors"
+                >
+                  詳細を見る
+                  <span className="ml-1 transition-transform group-hover:translate-x-1">→</span>
                 </Link>
               </div>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </main>
   );
