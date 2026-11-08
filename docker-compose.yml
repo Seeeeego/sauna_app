@@ -1,6 +1,6 @@
 services:
   app:
-    build: .
+    image: sauna_app-app:latest
     container_name: sauna-app
     volumes:
       - .:/app                      # ソースコードをマウント
